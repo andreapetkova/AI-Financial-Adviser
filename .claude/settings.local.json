@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nvm list *)",
+      "Bash(where nvm *)",
+      "Bash(where node *)",
+      "Bash(nvm use *)",
+      "Bash(npm create *)",
+      "Bash(cp -r temp-scaffold/* temp-scaffold/.* .)",
+      "Bash(rm -rf temp-scaffold)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(timeout 10 npx vite --host)",
+      "Bash(npm uninstall *)",
+      "Bash(npm --version)",
+      "Bash(timeout 8 npx vite)"
+    ]
+  }
+}
