@@ -1,7 +1,7 @@
 # Context Management
 
 - This file is the source of truth — if context is lost, re-read CLAUDE.md before continuing
-- Implement tasks following the docs/tasks.md file — mark each task as complete when done
+- Implement tasks following the docs/tasks.md file — before starting check the docs/summary.md to see last changes, mark each task as complete when done
 - After completing a task, summarise what changed in one sentence in docs/summary.md, then stop and wait
 - Run /clear manually between tasks to keep context lean
 
@@ -57,6 +57,10 @@ After every change, run in this order:
 1. `npx tsc --noEmit` — fix type errors first (catches structural issues)
 2. `npm test` — fix failing tests (catches behavioural issues)
 3. `npm run lint` — fix lint errors (catches style issues)
+
+# Git
+
+- **Commit message format**: `TASK-N: short description` (e.g. `TASK-1: project scaffolding`) — every commit must be prefixed with the task number it belongs to
 
 # Conventions
 

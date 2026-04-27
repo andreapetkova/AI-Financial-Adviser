@@ -13,7 +13,9 @@
       "Bash(timeout 10 npx vite --host)",
       "Bash(npm uninstall *)",
       "Bash(npm --version)",
-      "Bash(timeout 8 npx vite)"
+      "Bash(timeout 8 npx vite)",
+      "Bash(npx vitest *)",
+      "Bash(npm run *)"
     ]
   }
 }
