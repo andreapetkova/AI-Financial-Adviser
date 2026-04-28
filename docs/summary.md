@@ -5,3 +5,6 @@ Scaffolded Vite 6 + React 18 + TypeScript 5.7 project with all dependencies (Tai
 
 ## Task 2: Core Domain Models, Types & Zod Schemas
 Created domain models in `src/types/index.ts` (Transaction, Category, Budget, Insight, Upload, ParsedCSVRow, AI response types, User) and Zod validation schemas in `src/lib/validators/` (csvRowSchema with coercion, transactionSchema, categorizationResponseSchema, insightResponseSchema, budgetInputSchema, budgetSchema) with 21 passing tests covering valid data, edge cases, and rejection of invalid inputs.
+
+## Task 3: Supabase Setup (Database & Client)
+Created database migration SQL (`supabase/migrations/00001_initial_schema.sql`) with five tables (profiles, uploads, transactions, budgets, insights), indexes, RLS policies restricting all data to the owning user, and an auto-profile trigger on signup; added typed database interfaces (`src/lib/supabase/types.ts`), a typed Supabase client singleton (`src/lib/supabase/client.ts`), and query functions (`src/lib/supabase/queries.ts`) with snake_case-to-camelCase mappers for all CRUD operations.
