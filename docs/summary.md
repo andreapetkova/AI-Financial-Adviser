@@ -11,3 +11,6 @@ Created database migration SQL (`supabase/migrations/00001_initial_schema.sql`) 
 
 ## Task 4: Authentication (Supabase Auth)
 Implemented auth flow with `AuthContext` provider (`src/context/AuthContext.tsx`) wrapping Supabase `onAuthStateChange`, `useAuth()` hook (`src/hooks/useAuth.ts`), login and signup pages (`src/features/auth/`), `ProtectedRoute` component that redirects unauthenticated users to `/login`, and a sidebar `Layout` with navigation links and sign-out — all wired into `App.tsx` with public and protected route groups.
+
+## Task 5: CSV Upload & Parsing
+Built CSV upload flow with Papa Parse parser (`src/lib/parsers/csv.ts`) featuring auto-detect column mapping via header heuristics and Zod row validation, a `useFileUpload` hook orchestrating the multi-step state, and three UI components — `FileDropzone` (drag-and-drop), `ColumnMapper` (manual header mapping fallback), and `ParsePreview` (validation summary + table) — with `UploadPage` wiring the full flow from file drop through to Supabase persistence.

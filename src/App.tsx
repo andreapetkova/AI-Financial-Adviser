@@ -6,6 +6,7 @@ import { PublicRoute } from '@/components/PublicRoute';
 import { Layout } from '@/components/Layout';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { SignUpPage } from '@/features/auth/SignUpPage';
+import { UploadPage } from '@/features/upload/UploadPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +32,7 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<div>Dashboard</div>} />
-                <Route path="/upload" element={<div>Upload</div>} />
+                <Route path="/upload" element={<UploadPage />} />
                 <Route path="/transactions" element={<div>Transactions</div>} />
                 <Route path="/budget" element={<div>Budget</div>} />
                 <Route path="/insights" element={<div>Insights</div>} />
