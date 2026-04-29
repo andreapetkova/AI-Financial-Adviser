@@ -8,3 +8,6 @@ Created domain models in `src/types/index.ts` (Transaction, Category, Budget, In
 
 ## Task 3: Supabase Setup (Database & Client)
 Created database migration SQL (`supabase/migrations/00001_initial_schema.sql`) with five tables (profiles, uploads, transactions, budgets, insights), indexes, RLS policies restricting all data to the owning user, and an auto-profile trigger on signup; added typed database interfaces (`src/lib/supabase/types.ts`), a typed Supabase client singleton (`src/lib/supabase/client.ts`), and query functions (`src/lib/supabase/queries.ts`) with snake_case-to-camelCase mappers for all CRUD operations.
+
+## Task 4: Authentication (Supabase Auth)
+Implemented auth flow with `AuthContext` provider (`src/context/AuthContext.tsx`) wrapping Supabase `onAuthStateChange`, `useAuth()` hook (`src/hooks/useAuth.ts`), login and signup pages (`src/features/auth/`), `ProtectedRoute` component that redirects unauthenticated users to `/login`, and a sidebar `Layout` with navigation links and sign-out — all wired into `App.tsx` with public and protected route groups.

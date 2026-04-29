@@ -75,6 +75,12 @@ After every change, run in this order:
 - **Error boundaries**: the AI insights feature and the upload flow each have their own isolated error boundary — a Claude API failure must never crash the dashboard. All error boundary fallback UIs are defined in `src/components/`
 - **Type source of truth**: hand-written domain models in `src/types/` are the source of truth — Supabase-generated types must be kept in sync with them, not the other way around
 - **Auth state**: managed via a single `useAuth()` hook in `src/hooks/` backed by Supabase's `onAuthStateChange` — AuthContext is a thin wrapper only, not a general-purpose state store
+- **Descriptive naming**: prefer full, readable names over abbreviations and shorthands (e.g., `classnames` not `cn`, `handleSubmit` not `onSub`)
+- **Extract components over long class strings**: when Tailwind utility strings get long or repeat, extract a small component to own the styles rather than duplicating inline class strings
+- **Supabase auth listener ordering**: always register `onAuthStateChange` before calling `getSession()` — avoids a race where `getSession` overwrites a newer auth event
+- **Guard both route directions**: public-only pages (login, signup) must redirect authenticated users away; protected pages must redirect unauthenticated users to login — use `PublicRoute` and `ProtectedRoute` wrappers respectively
+- **Handle async errors at call sites**: every user-triggered async action (sign out, save, delete) must have error handling — never fire-and-forget an awaited call that can throw
+- **Consistent JSX string patterns**: use `{"string with apostrophe's"}` for inline text with special characters — avoid mixing `&apos;` entities and `{' '}` spacers
 
 # Don't
 
