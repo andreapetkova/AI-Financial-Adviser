@@ -14,3 +14,6 @@ Implemented auth flow with `AuthContext` provider (`src/context/AuthContext.tsx`
 
 ## Task 5: CSV Upload & Parsing
 Built CSV upload flow with Papa Parse parser (`src/lib/parsers/csv.ts`) featuring auto-detect column mapping via header heuristics and Zod row validation, a `useFileUpload` hook orchestrating the multi-step state, and three UI components — `FileDropzone` (drag-and-drop), `ColumnMapper` (manual header mapping fallback), and `ParsePreview` (validation summary + table) — with `UploadPage` wiring the full flow from file drop through to Supabase persistence.
+
+## Task 6: AI Service Layer (Vercel Serverless + Claude API)
+Created two Vercel serverless functions (`api/categorize.ts` and `api/insights.ts`) proxying Claude API calls with Zod-validated request/response schemas, a client-side rule-based categorizer (`src/lib/ai/rules.ts`) matching merchant keywords to categories for cost-efficient pre-filtering, service layer modules (`src/lib/ai/categorizer.ts` with batching and exponential-backoff retry, `src/lib/ai/insights.ts` with spending summary builder), and TanStack Query hooks (`useCategorizeMutation`, `useInsightsQuery`, `useGenerateInsightsMutation`) that orchestrate categorization with Supabase persistence and query invalidation.

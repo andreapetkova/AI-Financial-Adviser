@@ -101,6 +101,34 @@ export async function updateTransactionCategory(
   return toTransaction(data);
 }
 
+export async function updateTransactionCategories(
+  updates: Array<{ id: string; category: Category; confidence: number }>,
+): Promise<void> {
+  const { error } = await supabase.rpc('batch_update_categories', {
+    updates: JSON.stringify(updates),
+  });
+
+  if (error) {
+    const results = await Promise.allSettled(
+      updates.map(update =>
+        supabase
+          .from('transactions')
+          .update({
+            category: update.category,
+            confidence: update.confidence,
+            manually_edited: false,
+          })
+          .eq('id', update.id),
+      ),
+    );
+
+    const failures = results.filter(result => result.status === 'rejected');
+    if (failures.length > 0) {
+      throw new Error(`Failed to update ${failures.length} of ${updates.length} transactions`);
+    }
+  }
+}
+
 // --- Budgets ---
 
 export async function getBudgets(
