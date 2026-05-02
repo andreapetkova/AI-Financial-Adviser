@@ -101,16 +101,17 @@ export async function updateTransactionCategory(
   return toTransaction(data);
 }
 
+const UPDATE_BATCH_SIZE = 10;
+
 export async function updateTransactionCategories(
   updates: Array<{ id: string; category: Category; confidence: number }>,
 ): Promise<void> {
-  const { error } = await supabase.rpc('batch_update_categories', {
-    updates: JSON.stringify(updates),
-  });
+  let failureCount = 0;
 
-  if (error) {
+  for (let index = 0; index < updates.length; index += UPDATE_BATCH_SIZE) {
+    const batch = updates.slice(index, index + UPDATE_BATCH_SIZE);
     const results = await Promise.allSettled(
-      updates.map(update =>
+      batch.map(update =>
         supabase
           .from('transactions')
           .update({
@@ -122,10 +123,11 @@ export async function updateTransactionCategories(
       ),
     );
 
-    const failures = results.filter(result => result.status === 'rejected');
-    if (failures.length > 0) {
-      throw new Error(`Failed to update ${failures.length} of ${updates.length} transactions`);
-    }
+    failureCount += results.filter(result => result.status === 'rejected').length;
+  }
+
+  if (failureCount > 0) {
+    throw new Error(`Failed to update ${failureCount} of ${updates.length} transactions`);
   }
 }
 

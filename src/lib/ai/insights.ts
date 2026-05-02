@@ -10,6 +10,8 @@ interface SpendingEntry {
   count: number;
 }
 
+const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
+
 async function delay(milliseconds: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
@@ -78,12 +80,11 @@ export async function generateInsights(
         body: JSON.stringify(requestBody),
       });
 
-      if (response.status === 429 && attempt < MAX_RETRIES) {
-        lastError = new Error('Rate limited');
-        continue;
-      }
-
       if (!response.ok) {
+        if (TRANSIENT_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
+          lastError = new Error(`Insights generation failed with status ${response.status}`);
+          continue;
+        }
         const errorBody = await response.json().catch(() => ({}));
         throw new Error(
           (errorBody as { error?: string }).error ?? `Insights generation failed with status ${response.status}`,
@@ -94,7 +95,7 @@ export async function generateInsights(
       return insightResponseSchema.parse(data);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === MAX_RETRIES) break;
+      if (!(error instanceof TypeError) || attempt === MAX_RETRIES) break;
     }
   }
 

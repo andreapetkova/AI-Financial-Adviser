@@ -2,8 +2,9 @@
 node_modules/
 
 # Build
+.next/
+out/
 dist/
-dist-ssr/
 
 # Environment
 .env
@@ -31,3 +32,6 @@ playwright-report/
 
 # Vercel
 .vercel
+
+# Next.js
+next-env.d.ts

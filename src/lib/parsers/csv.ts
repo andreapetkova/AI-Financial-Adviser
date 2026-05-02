@@ -77,12 +77,15 @@ export function mapAndValidateRows(
 
   for (let index = 0; index < rows.length; index++) {
     const row = rows[index];
-    const rawInput = {
+    const rawInput: Record<string, string> = {
       date: row[mapping.date] ?? '',
       description: row[mapping.description] ?? '',
       amount: row[mapping.amount] ?? '',
-      currency: mapping.currency ? row[mapping.currency] : undefined,
     };
+
+    if (mapping.currency && row[mapping.currency]) {
+      rawInput.currency = row[mapping.currency];
+    }
 
     const result = csvRowSchema.safeParse(rawInput);
 

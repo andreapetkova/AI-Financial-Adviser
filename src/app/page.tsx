@@ -1,12 +1,13 @@
-import { Navigate, Outlet } from 'react-router-dom';
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { redirect } from 'next/navigation';
 
-export function PublicRoute() {
+export default function RootPage() {
   const { user, loading } = useAuth();
 
   if (loading) return <LoadingSpinner />;
-  if (user) return <Navigate to="/dashboard" replace />;
 
-  return <Outlet />;
+  redirect(user ? '/dashboard' : '/login');
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { createUpload, upsertTransactions } from '@/lib/supabase/queries';

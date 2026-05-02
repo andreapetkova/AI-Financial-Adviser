@@ -1,18 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { extractJson, getTextContent } from './parseAiResponse';
-
-const insightTypeValues = ['warning', 'saving', 'info'] as const;
-
-const insightSchema = z.object({
-  message: z.string().min(1),
-  type: z.enum(insightTypeValues),
-});
-
-const aiInsightResponseSchema = z.object({
-  insights: z.array(insightSchema),
-});
+import { insightResponseSchema } from '@/lib/validators/transaction';
+import { extractJson, getTextContent } from '@/lib/ai/parseAiResponse';
 
 const requestSchema = z.object({
   spending: z.array(z.object({
@@ -66,24 +57,31 @@ ${budgetLines}
 Return only the JSON object with insights:`;
 }
 
-export default async function handler(request: VercelRequest, response: VercelResponse) {
-  if (request.method !== 'POST') {
-    return response.status(405).json({ error: 'Method not allowed' });
+export async function POST(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const authHeader = request.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return response.status(401).json({ error: 'Unauthorized' });
+  const token = authHeader.slice(7);
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+  const { error: authError } = await supabase.auth.getUser(token);
+  if (authError) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return response.status(500).json({ error: 'AI service not configured' });
+    return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
   }
 
-  const parsed = requestSchema.safeParse(request.body);
+  const body = await request.json();
+  const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
-    return response.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
+    return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
   }
 
   try {
@@ -99,28 +97,28 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const text = getTextContent(message.content);
     if (!text) {
-      return response.status(502).json({ error: 'No text response from AI' });
+      return NextResponse.json({ error: 'No text response from AI' }, { status: 502 });
     }
 
     const jsonString = extractJson(text);
     const rawResponse = JSON.parse(jsonString);
-    const validated = aiInsightResponseSchema.parse(rawResponse);
+    const validated = insightResponseSchema.parse(rawResponse);
 
-    return response.status(200).json({
+    return NextResponse.json({
       insights: validated.insights,
       month: parsed.data.month,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return response.status(502).json({ error: 'Invalid AI response format', details: error.issues });
+      return NextResponse.json({ error: 'Invalid AI response format', details: error.issues }, { status: 502 });
     }
     if (error instanceof SyntaxError) {
-      return response.status(502).json({ error: 'AI returned invalid JSON' });
+      return NextResponse.json({ error: 'AI returned invalid JSON' }, { status: 502 });
     }
     if (error instanceof Anthropic.APIError) {
       const status = error.status === 429 ? 429 : 502;
-      return response.status(status).json({ error: 'AI service error', message: error.message });
+      return NextResponse.json({ error: 'AI service error', message: error.message }, { status });
     }
-    return response.status(500).json({ error: 'Internal server error' });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

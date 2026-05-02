@@ -1,36 +1,53 @@
 import type { Category, InsightType } from '@/types';
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
         Row: ProfileRow;
         Insert: ProfileInsert;
         Update: Partial<ProfileInsert>;
+        Relationships: [];
       };
       transactions: {
         Row: TransactionRow;
         Insert: TransactionInsert;
         Update: Partial<TransactionInsert>;
+        Relationships: [];
       };
       budgets: {
         Row: BudgetRow;
         Insert: BudgetInsert;
         Update: Partial<BudgetInsert>;
+        Relationships: [];
       };
       insights: {
         Row: InsightRow;
         Insert: InsightInsert;
         Update: Partial<InsightInsert>;
+        Relationships: [];
       };
       uploads: {
         Row: UploadRow;
         Insert: UploadInsert;
         Update: Partial<UploadInsert>;
+        Relationships: [];
       };
     };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
-}
+};
 
 export interface ProfileRow {
   id: string;

@@ -11,6 +11,13 @@ async function delay(milliseconds: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
+
+function isTransientError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  return false;
+}
+
 async function fetchWithRetry(
   transactions: TransactionInput[],
   accessToken: string,
@@ -32,12 +39,11 @@ async function fetchWithRetry(
         body: JSON.stringify({ transactions }),
       });
 
-      if (response.status === 429 && attempt < MAX_RETRIES) {
-        lastError = new Error('Rate limited');
-        continue;
-      }
-
       if (!response.ok) {
+        if (TRANSIENT_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
+          lastError = new Error(`Categorization failed with status ${response.status}`);
+          continue;
+        }
         const errorBody = await response.json().catch(() => ({}));
         throw new Error(
           (errorBody as { error?: string }).error ?? `Categorization failed with status ${response.status}`,
@@ -49,7 +55,7 @@ async function fetchWithRetry(
       return validated.results;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === MAX_RETRIES) break;
+      if (!isTransientError(error) || attempt === MAX_RETRIES) break;
     }
   }
 
