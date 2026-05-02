@@ -51,7 +51,7 @@ export function InsightsList({ insights, isLoading, hasTransactions }: InsightsL
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-16 text-center">
         <p className="text-sm font-medium text-gray-600">No insights yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Click {"\"Generate Insights\""} to get personalised financial analysis.
+          Click "Generate Insights" to get personalised financial analysis.
         </p>
       </div>
     );

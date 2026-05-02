@@ -1,70 +1,45 @@
 'use client';
 
-import { useState } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
 import { useInsightsQuery, useGenerateInsightsMutation } from '@/hooks/useInsights';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { InlineSpinner } from '@/components/InlineSpinner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InsightsList } from './components/InsightsList';
-
-function InsightsErrorFallback({
-  error,
-  onRetry,
-}: {
-  error: Error;
-  onRetry: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
-      <AlertTriangle className="mb-3 h-8 w-8 text-red-400" />
-      <p className="text-sm font-medium text-red-700">Failed to generate insights</p>
-      <p className="mt-1 text-sm text-red-500">{error.message}</p>
-      <button
-        onClick={onRetry}
-        className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Try Again
-      </button>
-    </div>
-  );
-}
 
 export function InsightsPage() {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [generateError, setGenerateError] = useState<Error | null>(null);
 
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactionsQuery();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
+  const { data: insights = [], isLoading: insightsLoading } = useInsightsQuery(selectedMonth);
+
   const {
-    data: insights = [],
-    isLoading: insightsLoading,
-  } = useInsightsQuery(selectedMonth);
+    mutate: generateInsights,
+    isPending: isGenerating,
+    isError,
+    error,
+    reset: resetMutation,
+  } = useGenerateInsightsMutation();
 
-  const { mutate: generateInsights, isPending: isGenerating } = useGenerateInsightsMutation();
-
-  const monthTransactions = transactions.filter(
-    transaction => transaction.date.slice(0, 7) === selectedMonth,
+  const monthTransactions = useMemo(
+    () => transactions.filter(transaction => transaction.date.slice(0, 7) === selectedMonth),
+    [transactions, selectedMonth],
   );
 
   const hasTransactions = monthTransactions.length > 0;
 
   function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
     setSelectedMonth(event.target.value);
-    setGenerateError(null);
+    resetMutation();
   }
 
   function handleGenerate() {
-    setGenerateError(null);
-    generateInsights(
-      { transactions: monthTransactions, budgets, month: selectedMonth },
-      {
-        onError: (error) => {
-          setGenerateError(error instanceof Error ? error : new Error(String(error)));
-        },
-      },
-    );
+    resetMutation();
+    generateInsights({ transactions: monthTransactions, budgets, month: selectedMonth });
   }
 
   if (transactionsLoading || budgetsLoading) {
@@ -74,6 +49,8 @@ export function InsightsPage() {
       </div>
     );
   }
+
+  const generateError = isError && error instanceof Error ? error : null;
 
   return (
     <div className="space-y-6">
@@ -98,7 +75,7 @@ export function InsightsPage() {
           >
             {isGenerating ? (
               <>
-                <LoadingSpinner className="h-4 w-4" />
+                <InlineSpinner />
                 Generating…
               </>
             ) : (
@@ -111,15 +88,41 @@ export function InsightsPage() {
         </div>
       </div>
 
-      {generateError ? (
-        <InsightsErrorFallback error={generateError} onRetry={handleGenerate} />
-      ) : (
-        <InsightsList
-          insights={insights}
-          isLoading={insightsLoading || isGenerating}
-          hasTransactions={hasTransactions}
-        />
-      )}
+      <ErrorBoundary
+        fallback={(renderError, reset) => (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+            <p className="text-sm font-medium text-red-700">Failed to display insights</p>
+            <p className="mt-1 text-sm text-red-500">{renderError.message}</p>
+            <button
+              onClick={reset}
+              className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
+          </div>
+        )}
+      >
+        {generateError ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+            <p className="text-sm font-medium text-red-700">Failed to generate insights</p>
+            <p className="mt-1 text-sm text-red-500">{generateError.message}</p>
+            <button
+              onClick={handleGenerate}
+              className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
+          </div>
+        ) : (
+          <InsightsList
+            insights={insights}
+            isLoading={insightsLoading || isGenerating}
+            hasTransactions={hasTransactions}
+          />
+        )}
+      </ErrorBoundary>
     </div>
   );
 }

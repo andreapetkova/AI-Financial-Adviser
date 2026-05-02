@@ -1,5 +1,3 @@
-'use client';
-
 import { AlertTriangle, Lightbulb, Info } from 'lucide-react';
 import type { Insight } from '@/types';
 
