@@ -78,10 +78,10 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Min amount</label>
+        <label className="text-xs font-medium text-muted-foreground">Amount from</label>
         <input
           type="number"
-          placeholder="0.00"
+          placeholder="-9999"
           value={filters.amountMin}
           onChange={e => handleChange('amountMin', e.target.value)}
           className="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -89,10 +89,10 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Max amount</label>
+        <label className="text-xs font-medium text-muted-foreground">Amount to</label>
         <input
           type="number"
-          placeholder="0.00"
+          placeholder="9999"
           value={filters.amountMax}
           onChange={e => handleChange('amountMax', e.target.value)}
           className="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"

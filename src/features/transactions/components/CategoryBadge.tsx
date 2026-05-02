@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckCircle } from 'lucide-react';
 import type { Category } from '@/types';
 

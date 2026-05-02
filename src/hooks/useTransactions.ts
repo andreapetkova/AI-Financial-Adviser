@@ -35,9 +35,9 @@ export function useUpdateCategoryMutation() {
 
       queryClient.setQueryData(
         ['transactions', user?.id],
-        (old: ReturnType<typeof Array.prototype.map> | undefined) => {
+        (old: import('@/types').Transaction[] | undefined) => {
           if (!old) return old;
-          return (old as Array<{ id: string; category: Category; manuallyEdited: boolean; confidence: number | null }>).map(transaction =>
+          return old.map(transaction =>
             transaction.id === transactionId
               ? { ...transaction, category, manuallyEdited: true, confidence: 1.0 }
               : transaction,

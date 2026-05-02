@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { CategoryBadge } from './CategoryBadge';
 import { CategoryEditor } from './CategoryEditor';
@@ -9,11 +9,17 @@ import type { Transaction, Category } from '@/types';
 type SortField = 'date' | 'description' | 'amount' | 'category';
 type SortDirection = 'asc' | 'desc';
 
+const COLUMN_LABELS: Record<SortField, string> = {
+  date: 'Date',
+  description: 'Description',
+  amount: 'Amount',
+  category: 'Category',
+};
+
 interface TransactionTableProps {
   transactions: Transaction[];
   onCategoryChange: (transactionId: string, category: Category) => void;
-  isPendingUpdate: boolean;
-  pendingTransactionId: string | null;
+  pendingTransactionIds: Set<string>;
 }
 
 function SortIcon({
@@ -58,8 +64,7 @@ function sortTransactions(
 export function TransactionTable({
   transactions,
   onCategoryChange,
-  isPendingUpdate,
-  pendingTransactionId,
+  pendingTransactionIds,
 }: TransactionTableProps) {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -73,7 +78,10 @@ export function TransactionTable({
     }
   }
 
-  const sorted = sortTransactions(transactions, sortField, sortDirection);
+  const sorted = useMemo(
+    () => sortTransactions(transactions, sortField, sortDirection),
+    [transactions, sortField, sortDirection],
+  );
 
   if (transactions.length === 0) {
     return (
@@ -88,16 +96,16 @@ export function TransactionTable({
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
-            {(['date', 'description', 'amount', 'category'] as SortField[]).map(field => (
+            {(Object.keys(COLUMN_LABELS) as SortField[]).map(field => (
               <th
                 key={field}
                 className="px-4 py-3 text-left font-medium text-muted-foreground"
               >
                 <button
                   onClick={() => handleSort(field)}
-                  className="flex items-center gap-1 capitalize hover:text-foreground"
+                  className="flex items-center gap-1 hover:text-foreground"
                 >
-                  {field}
+                  {COLUMN_LABELS[field]}
                   <SortIcon
                     field={field}
                     sortField={sortField}
@@ -113,7 +121,7 @@ export function TransactionTable({
         </thead>
         <tbody className="divide-y divide-border">
           {sorted.map(transaction => {
-            const isPending = isPendingUpdate && pendingTransactionId === transaction.id;
+            const isPending = pendingTransactionIds.has(transaction.id);
 
             return (
               <tr

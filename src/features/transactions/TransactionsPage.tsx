@@ -26,16 +26,17 @@ function applyFilters(
     if (filters.category !== 'all' && transaction.category !== filters.category) {
       return false;
     }
-    if (filters.dateFrom && transaction.date < filters.dateFrom) {
+    const transactionDate = transaction.date.slice(0, 10);
+    if (filters.dateFrom && transactionDate < filters.dateFrom) {
       return false;
     }
-    if (filters.dateTo && transaction.date > filters.dateTo) {
+    if (filters.dateTo && transactionDate > filters.dateTo) {
       return false;
     }
-    if (filters.amountMin !== '' && Math.abs(transaction.amount) < Number(filters.amountMin)) {
+    if (filters.amountMin !== '' && transaction.amount < Number(filters.amountMin)) {
       return false;
     }
-    if (filters.amountMax !== '' && Math.abs(transaction.amount) > Number(filters.amountMax)) {
+    if (filters.amountMax !== '' && transaction.amount > Number(filters.amountMax)) {
       return false;
     }
     return true;
@@ -46,7 +47,7 @@ export function TransactionsPage() {
   const { data: transactions, isLoading, isError } = useTransactionsQuery();
   const updateCategoryMutation = useUpdateCategoryMutation();
   const [filters, setFilters] = useState<TransactionFilterValues>(DEFAULT_FILTERS);
-  const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
+  const [pendingTransactionIds, setPendingTransactionIds] = useState<Set<string>>(new Set());
 
   const filteredTransactions = useMemo(
     () => applyFilters(transactions ?? [], filters),
@@ -54,10 +55,17 @@ export function TransactionsPage() {
   );
 
   function handleCategoryChange(transactionId: string, category: Category) {
-    setPendingTransactionId(transactionId);
+    setPendingTransactionIds(previous => new Set(previous).add(transactionId));
     updateCategoryMutation.mutate(
       { transactionId, category },
-      { onSettled: () => setPendingTransactionId(null) },
+      {
+        onSettled: () =>
+          setPendingTransactionIds(previous => {
+            const next = new Set(previous);
+            next.delete(transactionId);
+            return next;
+          }),
+      },
     );
   }
 
@@ -107,8 +115,7 @@ export function TransactionsPage() {
         <TransactionTable
           transactions={filteredTransactions}
           onCategoryChange={handleCategoryChange}
-          isPendingUpdate={updateCategoryMutation.isPending}
-          pendingTransactionId={pendingTransactionId}
+          pendingTransactionIds={pendingTransactionIds}
         />
       )}
     </div>
