@@ -23,9 +23,8 @@ export function CategoryBreakdown({
     );
   }
 
-  function handlePieClick(_: unknown, index: number) {
-    const clicked = data[index];
-    onCategorySelect(selectedCategory === clicked.category ? null : clicked.category);
+  function handlePieClick(entry: CategoryBreakdownItem) {
+    onCategorySelect(selectedCategory === entry.category ? null : entry.category);
   }
 
   return (
@@ -39,7 +38,7 @@ export function CategoryBreakdown({
           cy="45%"
           innerRadius={55}
           outerRadius={85}
-          onClick={handlePieClick}
+          onClick={(entry) => handlePieClick(entry as unknown as CategoryBreakdownItem)}
           className="cursor-pointer"
         >
           {data.map((entry) => (

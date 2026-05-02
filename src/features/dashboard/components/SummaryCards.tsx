@@ -3,10 +3,10 @@
 import { TrendingDown, TrendingUp, Tag, Target } from 'lucide-react';
 import type { SpendingSummary } from '../hooks/useSpendingData';
 
-function formatAmount(amount: number): string {
+function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'GBP',
+    currency,
     maximumFractionDigits: 2,
   }).format(amount);
 }
@@ -43,9 +43,10 @@ function SummaryCard({ icon, label, value, subtext, accent }: SummaryCardProps) 
 
 interface SummaryCardsProps {
   summary: SpendingSummary;
+  currency: string;
 }
 
-export function SummaryCards({ summary }: SummaryCardsProps) {
+export function SummaryCards({ summary, currency }: SummaryCardsProps) {
   const budgetSubtext =
     summary.budgetsTotal === 0
       ? 'No budgets set'
@@ -63,14 +64,14 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
       <SummaryCard
         icon={<TrendingDown className="h-5 w-5" />}
         label="Total Spending"
-        value={formatAmount(summary.totalSpending)}
+        value={formatAmount(summary.totalSpending, currency)}
         subtext={`${summary.transactionCount} transaction${summary.transactionCount === 1 ? '' : 's'}`}
         accent="red"
       />
       <SummaryCard
         icon={<TrendingUp className="h-5 w-5" />}
         label="Total Income"
-        value={formatAmount(summary.totalIncome)}
+        value={formatAmount(summary.totalIncome, currency)}
         accent="green"
       />
       <SummaryCard

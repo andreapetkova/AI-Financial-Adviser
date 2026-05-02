@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
@@ -12,6 +12,7 @@ import {
   useSpendingByDay,
   useMonthlyComparison,
 } from './hooks/useSpendingData';
+import { CATEGORY_LABELS } from '@/lib/categories';
 import type { Category } from '@/types';
 
 function ChartLoadingSkeleton() {
@@ -35,21 +36,24 @@ const MonthlyComparison = dynamic(
   { ssr: false, loading: () => <ChartLoadingSkeleton /> },
 );
 
-function currentMonthString(): string {
-  return new Date().toISOString().slice(0, 7);
-}
-
 export function DashboardPage() {
-  const [selectedMonth, setSelectedMonth] = useState(currentMonthString);
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   const { data: transactions = [], isLoading: transactionsLoading, isError: transactionsError } =
     useTransactionsQuery();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
 
+  const currency = transactions[0]?.currency ?? 'GBP';
+
+  const chartTransactions = useMemo(
+    () => selectedCategory ? transactions.filter(t => t.category === selectedCategory) : transactions,
+    [transactions, selectedCategory],
+  );
+
   const summary = useSpendingSummary(transactions, budgets, selectedMonth);
   const categoryBreakdown = useCategoryBreakdown(transactions, selectedMonth);
-  const dailySpending = useSpendingByDay(transactions, selectedMonth);
+  const dailySpending = useSpendingByDay(chartTransactions, selectedMonth);
   const monthlyComparison = useMonthlyComparison(transactions);
 
   function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -92,14 +96,14 @@ export function DashboardPage() {
         />
       </div>
 
-      <SummaryCards summary={summary} />
+      <SummaryCards summary={summary} currency={currency} />
 
       <div className="rounded-lg border border-border bg-card p-5">
         <h2 className="mb-4 text-sm font-medium">
           Daily Spending
           {selectedCategory && (
-            <span className="ml-2 text-muted-foreground">
-              — all categories shown
+            <span className="ml-2 font-normal text-muted-foreground">
+              {`— ${CATEGORY_LABELS[selectedCategory]}`}
             </span>
           )}
         </h2>

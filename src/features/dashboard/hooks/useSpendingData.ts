@@ -35,7 +35,9 @@ export function useSpendingSummary(
     const monthTransactions = filterByMonth(transactions, month);
     const categorySpending = buildCategorySpendingMap(monthTransactions);
 
-    const totalSpending = Array.from(categorySpending.values()).reduce((sum, v) => sum + v, 0);
+    const totalSpending = monthTransactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     const totalIncome = monthTransactions
       .filter(t => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0);
@@ -156,10 +158,13 @@ export function useMonthlyComparison(transactions: Transaction[]): MonthlyCompar
       .slice(-6)
       .map(([month, { spending, income }]) => ({
         month,
-        label: new Date(`${month}-02`).toLocaleDateString('en-GB', {
-          month: 'short',
-          year: '2-digit',
-        }),
+        label: (() => {
+          const [year, m] = month.split('-');
+          return new Date(Number(year), Number(m) - 1).toLocaleDateString('en-GB', {
+            month: 'short',
+            year: '2-digit',
+          });
+        })(),
         spending,
         income,
       }));
