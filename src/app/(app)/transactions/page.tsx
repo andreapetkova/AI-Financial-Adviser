@@ -1,3 +1,7 @@
-export default function TransactionsPage() {
-  return <div>Transactions</div>;
+'use client';
+
+import { TransactionsPage } from '@/features/transactions/TransactionsPage';
+
+export default function TransactionsRoute() {
+  return <TransactionsPage />;
 }
