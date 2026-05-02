@@ -25,7 +25,7 @@ export function BudgetProgressCard({
   currency,
   onEdit,
 }: BudgetProgressCardProps) {
-  const percentUsed = budget.limitAmount > 0 ? (spent / budget.limitAmount) * 100 : 0;
+  const percentUsed = budget.limitAmount > 0 ? (spent / budget.limitAmount) * 100 : spent > 0 ? 100 : 0;
   const isOverBudget = spent > budget.limitAmount;
   const isNearLimit = percentUsed >= 90;
   const barWidth = Math.min(percentUsed, 100);

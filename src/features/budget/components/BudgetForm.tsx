@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CATEGORIES } from '@/types';
 import { CATEGORY_LABELS } from '@/lib/categories';
 import { budgetInputSchema } from '@/lib/validators/budget';
@@ -35,23 +35,12 @@ export function BudgetForm({
   );
   const [month, setMonth] = useState(editingBudget?.month ?? defaultMonth);
   const [errors, setErrors] = useState<FormErrors>({});
-
-  useEffect(() => {
-    if (editingBudget) {
-      setCategory(editingBudget.category);
-      setLimitAmount(String(editingBudget.limitAmount));
-      setMonth(editingBudget.month);
-    } else {
-      setCategory('');
-      setLimitAmount('');
-      setMonth(defaultMonth);
-    }
-    setErrors({});
-  }, [editingBudget, defaultMonth]);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setErrors({});
+    setFormError(null);
 
     const parsed = budgetInputSchema.safeParse({
       category,
@@ -73,7 +62,7 @@ export function BudgetForm({
       await upsertMutation.mutateAsync(parsed.data);
       onSuccess();
     } catch {
-      setErrors({ limitAmount: 'Failed to save budget. Please try again.' });
+      setFormError('Failed to save budget. Please try again.');
     }
   }
 
@@ -148,6 +137,10 @@ export function BudgetForm({
             </button>
           )}
         </div>
+
+        {formError && (
+          <p className="w-full text-xs text-destructive">{formError}</p>
+        )}
       </form>
     </div>
   );

@@ -28,7 +28,7 @@ export function useUpsertBudgetMutation() {
         month: input.month,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 }

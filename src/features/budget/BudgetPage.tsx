@@ -41,7 +41,9 @@ export function BudgetPage() {
 
   function handleEdit(budget: Budget) {
     setEditingBudget(budget);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
   }
 
   function handleFormSuccess() {
@@ -81,6 +83,7 @@ export function BudgetPage() {
       />
 
       <BudgetForm
+        key={editingBudget?.id ?? 'new'}
         editingBudget={editingBudget}
         defaultMonth={selectedMonth}
         onSuccess={handleFormSuccess}
