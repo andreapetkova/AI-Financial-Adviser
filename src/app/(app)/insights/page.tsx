@@ -1,3 +1,7 @@
-export default function InsightsPage() {
-  return <div>Insights</div>;
+'use client';
+
+import { InsightsPage } from '@/features/insights/InsightsPage';
+
+export default function InsightsRoute() {
+  return <InsightsPage />;
 }

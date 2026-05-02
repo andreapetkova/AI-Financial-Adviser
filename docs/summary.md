@@ -27,5 +27,8 @@ Moved shared category constants (labels + hex chart colors) to `src/lib/categori
 ## Task 9: Budgeting System
 Added `useUpsertBudgetMutation` to `useBudgets.ts`; built `BudgetProgressCard` (progress bar green→yellow→red at 75/90%, AlertTriangle icon, over-budget copy), `BudgetForm` (Zod-validated inline form for add/edit with field-level errors and cancel), `BudgetOverview` (responsive grid with empty state), and `BudgetPage` (month picker, memoized category spending map derived from transactions, edit-scroll-to-form flow).
 
+## Task 10: AI Insights
+Built `InsightCard` (type-keyed icon/colour config for warning/saving/info using Lucide icons), `InsightsList` (loading skeletons, empty states for no-transactions and no-insights-yet), and `InsightsPage` (month picker, Generate Insights button with pending state, inline error fallback with retry — AI failure isolated within the page, never crashes other features); updated `LoadingSpinner` to accept an optional `className` for inline spinner use; wired up the page route.
+
 ## Next.js Migration
 Migrated from Vite + React Router to Next.js 16 App Router with React 19. Replaced React Router with file-based routing under `src/app/` using route groups: `(auth)` for public pages (login, signup) and `(app)` for protected pages with sidebar layout. Converted Vercel serverless functions to Next.js Route Handlers sharing types via `@/` imports. Updated environment variables from `VITE_*` to `NEXT_PUBLIC_*`, replaced `import.meta.env` with `process.env`, and upgraded Supabase client to untyped mode for SDK v2.105 compatibility. Removed React Router, Vite, and related configs.
