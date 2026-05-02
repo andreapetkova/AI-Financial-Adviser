@@ -24,5 +24,8 @@ Built transaction management feature with `useTransactionsQuery` and `useUpdateC
 ## Task 8: Dashboard (Charts & Overview)
 Moved shared category constants (labels + hex chart colors) to `src/lib/categories.ts`; built `useBudgetsQuery` hook, four memoized spending data hooks (`useSpendingSummary`, `useCategoryBreakdown`, `useSpendingByDay`, `useMonthlyComparison`), four dashboard components (`SummaryCards` with 4 KPI cards, `SpendingChart` daily bar chart, `CategoryBreakdown` donut chart with click-to-highlight, `MonthlyComparison` 6-month grouped bar chart), all three chart components lazy-loaded via `next/dynamic` with `ssr: false`; `DashboardPage` with month picker and selected-category state.
 
+## Task 9: Budgeting System
+Added `useUpsertBudgetMutation` to `useBudgets.ts`; built `BudgetProgressCard` (progress bar green→yellow→red at 75/90%, AlertTriangle icon, over-budget copy), `BudgetForm` (Zod-validated inline form for add/edit with field-level errors and cancel), `BudgetOverview` (responsive grid with empty state), and `BudgetPage` (month picker, memoized category spending map derived from transactions, edit-scroll-to-form flow).
+
 ## Next.js Migration
 Migrated from Vite + React Router to Next.js 16 App Router with React 19. Replaced React Router with file-based routing under `src/app/` using route groups: `(auth)` for public pages (login, signup) and `(app)` for protected pages with sidebar layout. Converted Vercel serverless functions to Next.js Route Handlers sharing types via `@/` imports. Updated environment variables from `VITE_*` to `NEXT_PUBLIC_*`, replaced `import.meta.env` with `process.env`, and upgraded Supabase client to untyped mode for SDK v2.105 compatibility. Removed React Router, Vite, and related configs.

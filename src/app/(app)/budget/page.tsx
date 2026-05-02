@@ -1,3 +1,7 @@
-export default function BudgetPage() {
-  return <div>Budget</div>;
+'use client';
+
+import { BudgetPage } from '@/features/budget/BudgetPage';
+
+export default function BudgetRoute() {
+  return <BudgetPage />;
 }
