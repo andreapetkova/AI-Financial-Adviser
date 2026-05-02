@@ -86,6 +86,16 @@ After every change, run in this order:
 - **Handle async errors at call sites**: every user-triggered async action (sign out, save, delete) must have error handling — never fire-and-forget an awaited call that can throw
 - **Consistent JSX string patterns**: use `{"string with apostrophe's"}` for inline text with special characters — avoid mixing `&apos;` entities and `{' '}` spacers
 - **Environment variables**: use `NEXT_PUBLIC_` prefix for client-side env vars, no prefix for server-only (API routes)
+- **Shared feature constants belong in `src/lib/`**: labels, display names, or color maps used across more than one feature (e.g. `CATEGORY_LABELS`, `CATEGORY_CHART_COLORS`) live in `src/lib/`, not inside a feature component — feature components re-export them if needed
+- **TanStack Query `setQueryData` types**: always type the updater argument with the actual domain type (e.g. `Transaction[]`), never with `ReturnType<typeof Array.prototype.map>` or other indirect casts
+- **Concurrent pending state**: when multiple items can be mutating simultaneously, track pending IDs in a `Set<string>` — never a single `string | null` which silently drops in-flight state on rapid interaction
+- **Memoize derived sorts and filters**: any sort or filter on a list that re-runs on every render must be wrapped in `useMemo` — even for small lists, it signals intent and prevents silent regressions as data grows
+- **Date normalization before string comparison**: always call `.slice(0, 10)` on transaction dates before comparing with filter strings — Supabase can return full ISO timestamps and lexicographic comparison breaks silently
+- **Local-time month parsing**: never use `new Date(\`${month}-01\`)` to parse a YYYY-MM string — UTC midnight rolls back to the previous month in negative-offset timezones. Use `new Date(Number(year), Number(m) - 1)` instead
+- **Financial totals must include uncategorized transactions**: `totalSpending` and similar aggregates must sum *all* matching transactions regardless of whether `category` is null — silently excluding uncategorized rows produces wrong numbers the moment a user uploads a fresh CSV
+- **Currency from data, never hardcoded**: derive the display currency from `transactions[0]?.currency` — hardcoding `'GBP'` or any symbol breaks for any user with a different statement
+- **UI labels must match actual behaviour**: a label saying "filtered by X" or "showing Y" must reflect what the component actually renders — if the filter isn't wired up, remove the label rather than leaving misleading copy
+- **Recharts event handlers**: in Recharts `<Pie onClick>`, use the data item passed as the first argument to the handler — do not index back into the component's `data` prop by the second `index` argument, as prop and rendered order can diverge during re-renders
 
 # Don't
 
@@ -98,3 +108,5 @@ After every change, run in this order:
 - Don't add Zustand unless you feel genuine cross-cutting state pain that Context cannot solve — it is not in the stack by default
 - Don't let a Claude API failure propagate to the full page — AI features must fail within their own error boundary
 - Don't call Supabase-generated types your source of truth — sync them to `src/types/`, never the reverse
+- Don't use `Math.abs` on transaction amounts in range filters — filter on signed values so users can distinguish income (positive) from expenses (negative)
+- Don't use `useState(someFunction)` when you mean lazy initialisation — use `useState(() => someFunction())` so the intent is unambiguous to readers
