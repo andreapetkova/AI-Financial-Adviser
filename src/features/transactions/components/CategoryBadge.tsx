@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle } from 'lucide-react';
+import { CATEGORY_LABELS } from '@/lib/categories';
 import type { Category } from '@/types';
 
 const CATEGORY_COLORS: Record<Category, string> = {
@@ -21,26 +22,6 @@ const CATEGORY_COLORS: Record<Category, string> = {
   debt_payments: 'bg-amber-100 text-amber-800',
   gifts_donations: 'bg-violet-100 text-violet-800',
   other: 'bg-gray-100 text-gray-800',
-};
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  housing: 'Housing',
-  transportation: 'Transportation',
-  food_dining: 'Food & Dining',
-  groceries: 'Groceries',
-  utilities: 'Utilities',
-  healthcare: 'Healthcare',
-  entertainment: 'Entertainment',
-  shopping: 'Shopping',
-  subscriptions: 'Subscriptions',
-  travel: 'Travel',
-  education: 'Education',
-  personal_care: 'Personal Care',
-  income: 'Income',
-  savings_investments: 'Savings & Investments',
-  debt_payments: 'Debt Payments',
-  gifts_donations: 'Gifts & Donations',
-  other: 'Other',
 };
 
 interface CategoryBadgeProps {
@@ -80,4 +61,4 @@ export function CategoryBadge({ category, confidence, manuallyEdited }: Category
   );
 }
 
-export { CATEGORY_LABELS };
+export { CATEGORY_LABELS } from '@/lib/categories';

@@ -1,0 +1,41 @@
+import type { Category } from '@/types';
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  housing: 'Housing',
+  transportation: 'Transportation',
+  food_dining: 'Food & Dining',
+  groceries: 'Groceries',
+  utilities: 'Utilities',
+  healthcare: 'Healthcare',
+  entertainment: 'Entertainment',
+  shopping: 'Shopping',
+  subscriptions: 'Subscriptions',
+  travel: 'Travel',
+  education: 'Education',
+  personal_care: 'Personal Care',
+  income: 'Income',
+  savings_investments: 'Savings & Investments',
+  debt_payments: 'Debt Payments',
+  gifts_donations: 'Gifts & Donations',
+  other: 'Other',
+};
+
+export const CATEGORY_CHART_COLORS: Record<Category, string> = {
+  housing: '#3b82f6',
+  transportation: '#f97316',
+  food_dining: '#eab308',
+  groceries: '#22c55e',
+  utilities: '#06b6d4',
+  healthcare: '#ef4444',
+  entertainment: '#a855f7',
+  shopping: '#ec4899',
+  subscriptions: '#6366f1',
+  travel: '#0ea5e9',
+  education: '#14b8a6',
+  personal_care: '#f43f5e',
+  income: '#10b981',
+  savings_investments: '#84cc16',
+  debt_payments: '#f59e0b',
+  gifts_donations: '#8b5cf6',
+  other: '#6b7280',
+};

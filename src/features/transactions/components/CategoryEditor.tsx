@@ -1,7 +1,7 @@
 'use client';
 
 import { CATEGORIES } from '@/types';
-import { CATEGORY_LABELS } from './CategoryBadge';
+import { CATEGORY_LABELS } from '@/lib/categories';
 import type { Category } from '@/types';
 
 interface CategoryEditorProps {
