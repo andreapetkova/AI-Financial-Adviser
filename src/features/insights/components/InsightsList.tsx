@@ -1,5 +1,3 @@
-'use client';
-
 import { InsightCard } from './InsightCard';
 import type { Insight } from '@/types';
 

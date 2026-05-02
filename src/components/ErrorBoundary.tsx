@@ -7,6 +7,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, reset: () => void) => ReactNode;
+  onReset?: () => void;
 }
 
 interface ErrorBoundaryState {
@@ -28,6 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleReset = () => {
+    this.props.onReset?.();
     this.setState({ error: null });
   };
 
