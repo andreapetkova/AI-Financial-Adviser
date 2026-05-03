@@ -91,6 +91,10 @@ describe('LoginPage', () => {
     });
 
     await act(async () => { resolveSignIn(); });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /^sign in$/i })).not.toBeDisabled();
+    });
   });
 
   it('contains a link to the sign-up page', () => {

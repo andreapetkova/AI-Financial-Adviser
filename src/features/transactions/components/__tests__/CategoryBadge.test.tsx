@@ -40,8 +40,14 @@ describe('CategoryBadge', () => {
     const { container } = render(
       <CategoryBadge category="groceries" confidence={0.9} manuallyEdited={true} />,
     );
-    // Lucide CheckCircle renders an SVG
     expect(container.querySelector('svg')).toBeInTheDocument();
+  });
+
+  it('does not show a checkmark icon when not manually edited', () => {
+    const { container } = render(
+      <CategoryBadge category="groceries" confidence={0.9} manuallyEdited={false} />,
+    );
+    expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
   it('includes confidence percentage in the tooltip for AI-categorized items', () => {

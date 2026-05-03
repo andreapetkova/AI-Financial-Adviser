@@ -128,6 +128,22 @@ describe('categorizeTransactions', () => {
     expect(global.fetch).toHaveBeenCalledTimes(4); // initial + 3 retries
   });
 
+  it('retries when fetch throws a TypeError (network error)', async () => {
+    vi.spyOn(global, 'fetch')
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(
+        mockFetch({ results: [{ transactionId: TX_ID_1, category: 'other', confidence: 0.6 }] }),
+      );
+    const promise = categorizeTransactions(
+      [makeTransaction(TX_ID_1, 'Unknown Corp')],
+      'token',
+    );
+    await vi.runAllTimersAsync();
+    const results = await promise;
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(results[0].category).toBe('other');
+  });
+
   it('throws immediately on a non-retryable 400 error without retrying', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(
       mockFetch({ error: 'Bad request' }, 400),
