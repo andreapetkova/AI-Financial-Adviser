@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { Upload } from 'lucide-react';
 import { useTransactionsQuery, useUpdateCategoryMutation } from '@/hooks/useTransactions';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useToast } from '@/context/ToastContext';
+import { SkeletonTable } from '@/components/Skeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { TransactionTable } from './components/TransactionTable';
 import {
   TransactionFilters,
@@ -46,6 +49,7 @@ function applyFilters(
 export function TransactionsPage() {
   const { data: transactions, isLoading, isError } = useTransactionsQuery();
   const updateCategoryMutation = useUpdateCategoryMutation();
+  const toast = useToast();
   const [filters, setFilters] = useState<TransactionFilterValues>(DEFAULT_FILTERS);
   const [pendingTransactionIds, setPendingTransactionIds] = useState<Set<string>>(new Set());
 
@@ -59,6 +63,12 @@ export function TransactionsPage() {
     updateCategoryMutation.mutate(
       { transactionId, category },
       {
+        onSuccess: () => {
+          toast.success('Category updated.');
+        },
+        onError: () => {
+          toast.error('Failed to update category. Please try again.');
+        },
         onSettled: () =>
           setPendingTransactionIds(previous => {
             const next = new Set(previous);
@@ -71,8 +81,11 @@ export function TransactionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner />
+      <div className="space-y-6">
+        <div>
+          <div className="h-7 w-40 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+        </div>
+        <SkeletonTable rows={8} />
       </div>
     );
   }
@@ -106,11 +119,12 @@ export function TransactionsPage() {
       )}
 
       {total === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-20 text-center">
-          <p className="text-muted-foreground">
-            Upload a bank statement CSV to see your transactions here.
-          </p>
-        </div>
+        <EmptyState
+          icon={Upload}
+          title="No transactions yet"
+          message="Upload a bank statement CSV to see your transactions here."
+          action={{ label: 'Upload CSV', href: '/upload' }}
+        />
       ) : (
         <TransactionTable
           transactions={filteredTransactions}

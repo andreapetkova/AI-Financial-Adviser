@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkeletonCard } from '@/components/Skeleton';
 import { SummaryCards } from './components/SummaryCards';
 import {
   useSpendingSummary,
@@ -63,8 +63,15 @@ export function DashboardPage() {
 
   if (transactionsLoading || budgetsLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner />
+      <div className="space-y-6" aria-label="Loading dashboard" role="status">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} lines={2} />)}
+        </div>
+        <SkeletonCard lines={4} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SkeletonCard lines={4} />
+          <SkeletonCard lines={4} />
+        </div>
       </div>
     );
   }
@@ -88,7 +95,9 @@ export function DashboardPage() {
               : 'Your financial overview for the selected month.'}
           </p>
         </div>
+        <label htmlFor="dashboard-month" className="sr-only">Select month</label>
         <input
+          id="dashboard-month"
           type="month"
           value={selectedMonth}
           onChange={handleMonthChange}

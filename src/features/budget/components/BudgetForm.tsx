@@ -5,6 +5,7 @@ import { CATEGORIES } from '@/types';
 import { CATEGORY_LABELS } from '@/lib/categories';
 import { budgetInputSchema } from '@/lib/validators/budget';
 import { useUpsertBudgetMutation } from '@/hooks/useBudgets';
+import { useToast } from '@/context/ToastContext';
 import { SubmitButton } from '@/components/SubmitButton';
 import type { Budget } from '@/types';
 
@@ -28,6 +29,7 @@ export function BudgetForm({
   onCancel,
 }: BudgetFormProps) {
   const upsertMutation = useUpsertBudgetMutation();
+  const toast = useToast();
 
   const [category, setCategory] = useState(editingBudget?.category ?? '');
   const [limitAmount, setLimitAmount] = useState(
@@ -60,9 +62,16 @@ export function BudgetForm({
 
     try {
       await upsertMutation.mutateAsync(parsed.data);
+      toast.success(
+        editingBudget
+          ? `Budget updated for ${CATEGORY_LABELS[editingBudget.category]}.`
+          : 'Budget saved.',
+      );
       onSuccess();
     } catch {
-      setFormError('Failed to save budget. Please try again.');
+      const message = 'Failed to save budget. Please try again.';
+      setFormError(message);
+      toast.error(message);
     }
   }
 
@@ -76,8 +85,11 @@ export function BudgetForm({
 
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Category</label>
+          <label htmlFor="budget-category" className="text-xs font-medium text-muted-foreground">
+            Category
+          </label>
           <select
+            id="budget-category"
             value={category}
             onChange={e => setCategory(e.target.value)}
             disabled={isEditing}
@@ -89,13 +101,16 @@ export function BudgetForm({
             ))}
           </select>
           {errors.category && (
-            <p className="text-xs text-destructive">{errors.category}</p>
+            <p className="text-xs text-destructive" role="alert">{errors.category}</p>
           )}
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Monthly limit</label>
+          <label htmlFor="budget-limit" className="text-xs font-medium text-muted-foreground">
+            Monthly limit
+          </label>
           <input
+            id="budget-limit"
             type="number"
             min="0.01"
             step="0.01"
@@ -105,13 +120,16 @@ export function BudgetForm({
             className="w-36 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {errors.limitAmount && (
-            <p className="text-xs text-destructive">{errors.limitAmount}</p>
+            <p className="text-xs text-destructive" role="alert">{errors.limitAmount}</p>
           )}
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Month</label>
+          <label htmlFor="budget-month" className="text-xs font-medium text-muted-foreground">
+            Month
+          </label>
           <input
+            id="budget-month"
             type="month"
             value={month}
             onChange={e => setMonth(e.target.value)}
@@ -119,7 +137,7 @@ export function BudgetForm({
             className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
           {errors.month && (
-            <p className="text-xs text-destructive">{errors.month}</p>
+            <p className="text-xs text-destructive" role="alert">{errors.month}</p>
           )}
         </div>
 
@@ -139,7 +157,7 @@ export function BudgetForm({
         </div>
 
         {formError && (
-          <p className="w-full text-xs text-destructive">{formError}</p>
+          <p className="w-full text-xs text-destructive" role="alert">{formError}</p>
         )}
       </form>
     </div>

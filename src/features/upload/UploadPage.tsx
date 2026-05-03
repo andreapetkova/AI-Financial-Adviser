@@ -2,6 +2,7 @@
 
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/context/ToastContext';
 import { createUpload, upsertTransactions } from '@/lib/supabase/queries';
 import type { TransactionInsert } from '@/lib/supabase/types';
 import { FileDropzone } from './components/FileDropzone';
@@ -12,6 +13,7 @@ import { CheckCircle } from 'lucide-react';
 export function UploadPage() {
   const { user } = useAuth();
   const upload = useFileUpload();
+  const toast = useToast();
 
   async function handleConfirm() {
     if (!user || !upload.file) return;
@@ -40,9 +42,14 @@ export function UploadPage() {
       await upsertTransactions(transactionInserts);
       upload.setSavedCount(validRows.length);
       upload.setStep('success');
+      toast.success(
+        `${validRows.length} ${validRows.length === 1 ? 'transaction' : 'transactions'} saved successfully.`,
+      );
     } catch (error) {
-      upload.setError(error instanceof Error ? error.message : 'Failed to save transactions');
+      const message = error instanceof Error ? error.message : 'Failed to save transactions';
+      upload.setError(message);
       upload.setStep('preview');
+      toast.error(message);
     }
   }
 
@@ -88,11 +95,12 @@ export function UploadPage() {
 
       {upload.step === 'success' && (
         <div className="flex flex-col items-center gap-4 rounded-lg border bg-card p-12 text-center">
-          <CheckCircle className="h-12 w-12 text-green-600" />
+          <CheckCircle className="h-12 w-12 text-green-600" aria-hidden="true" />
           <div>
             <p className="text-lg font-semibold">Upload complete</p>
             <p className="text-sm text-muted-foreground">
-              {upload.savedCount} {upload.savedCount === 1 ? 'transaction' : 'transactions'} saved successfully.
+              {upload.savedCount} {upload.savedCount === 1 ? 'transaction' : 'transactions'} saved
+              successfully.
             </p>
           </div>
           <button

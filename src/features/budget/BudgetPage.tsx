@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkeletonCard } from '@/components/Skeleton';
 import { BudgetOverview } from './components/BudgetOverview';
 import { BudgetForm } from './components/BudgetForm';
 import type { Budget, Category } from '@/types';
@@ -52,8 +52,11 @@ export function BudgetPage() {
 
   if (transactionsLoading || budgetsLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner />
+      <div className="space-y-6" role="status" aria-label="Loading budgets">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} lines={3} />)}
+        </div>
+        <SkeletonCard lines={2} />
       </div>
     );
   }
@@ -67,7 +70,9 @@ export function BudgetPage() {
             Set monthly spending limits per category and track your progress.
           </p>
         </div>
+        <label htmlFor="budget-page-month" className="sr-only">Select month</label>
         <input
+          id="budget-page-month"
           type="month"
           value={selectedMonth}
           onChange={handleMonthChange}

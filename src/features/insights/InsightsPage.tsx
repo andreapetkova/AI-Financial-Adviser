@@ -6,7 +6,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
 import { useInsightsQuery, useGenerateInsightsMutation } from '@/hooks/useInsights';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useToast } from '@/context/ToastContext';
+import { SkeletonCard } from '@/components/Skeleton';
 import { InlineSpinner } from '@/components/InlineSpinner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InsightsList } from './components/InsightsList';
@@ -28,7 +29,7 @@ function InsightsErrorBlock({
         onClick={onRetry}
         className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
       >
-        <RefreshCw className="h-4 w-4" />
+        <RefreshCw className="h-4 w-4" aria-hidden="true" />
         Try Again
       </button>
     </div>
@@ -39,6 +40,7 @@ export function InsightsPage() {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   const queryClient = useQueryClient();
+  const toast = useToast();
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactionsQuery();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
   const { data: insights = [], isLoading: insightsLoading } = useInsightsQuery(selectedMonth);
@@ -65,7 +67,22 @@ export function InsightsPage() {
 
   function handleGenerate() {
     resetMutation();
-    generateInsights({ transactions: monthTransactions, budgets, month: selectedMonth });
+    generateInsights(
+      { transactions: monthTransactions, budgets, month: selectedMonth },
+      {
+        onSuccess: (generated) => {
+          const count = generated.insights.length;
+          toast.success(`${count} insight${count === 1 ? '' : 's'} generated.`);
+        },
+        onError: (generateError) => {
+          toast.error(
+            generateError instanceof Error
+              ? generateError.message
+              : 'Failed to generate insights.',
+          );
+        },
+      },
+    );
   }
 
   // Invalidate cached insights so the boundary re-fetches fresh data after a render error,
@@ -88,7 +105,11 @@ export function InsightsPage() {
   );
 
   if (transactionsLoading || budgetsLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="space-y-4" role="status" aria-label="Loading insights">
+        {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} lines={3} />)}
+      </div>
+    );
   }
 
   // Two distinct failure modes:
@@ -98,7 +119,7 @@ export function InsightsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Insights</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -106,7 +127,11 @@ export function InsightsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <label htmlFor="insights-month" className="sr-only">
+            Select month
+          </label>
           <input
+            id="insights-month"
             type="month"
             value={selectedMonth}
             onChange={handleMonthChange}
@@ -115,6 +140,7 @@ export function InsightsPage() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !hasTransactions}
+            aria-label={isGenerating ? 'Generating insights…' : 'Generate insights'}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isGenerating ? (
@@ -124,7 +150,7 @@ export function InsightsPage() {
               </>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 Generate Insights
               </>
             )}
