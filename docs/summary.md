@@ -30,6 +30,9 @@ Added `useUpsertBudgetMutation` to `useBudgets.ts`; built `BudgetProgressCard` (
 ## Task 10: AI Insights
 Built `InsightCard` (type-keyed icon/colour config for warning/saving/info using Lucide icons), `InsightsList` (loading skeletons, empty states for no-transactions and no-insights-yet), and `InsightsPage` (month picker, Generate Insights button with pending state, inline error fallback with retry — AI failure isolated within the page, never crashes other features); updated `LoadingSpinner` to accept an optional `className` for inline spinner use; wired up the page route.
 
+## Task 12: Unit & Integration Tests
+Added 94 new tests across 10 new test files covering CSV parsing (`detectColumnMapping`, `mapAndValidateRows`), AI service layer (`matchRule`, `categorizeByRules`, `extractJson`, `getTextContent`, retry/batching logic in `categorizeTransactions`), and six components (`CategoryBadge`, `CategoryEditor`, `BudgetProgressCard`, `InsightCard`, `FileDropzone`, `LoginPage`). Total suite: 115 tests, all passing.
+
 ## Task 11: UX Polish & Error Handling
 Built a toast notification system (`ToastContext` + `useToast` hook + `ToastContainer`) wired to upload success/failure, category updates, budget saves, and AI insight generation; added reusable `EmptyState` and `Skeleton`/`SkeletonCard`/`SkeletonTable` components; made the app layout mobile-responsive with a hamburger menu, slide-in sidebar, and dark overlay; added ARIA labels to all month pickers, icon-only buttons, loading spinners, and nav links.
 
