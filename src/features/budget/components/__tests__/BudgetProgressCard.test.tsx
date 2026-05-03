@@ -100,8 +100,23 @@ describe('BudgetProgressCard', () => {
       />,
     );
     expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
-    // AlertTriangle icon is rendered as an SVG
-    expect(container.querySelector('svg')).toBeInTheDocument();
+    expect(
+      container.querySelector('[aria-label="Approaching or over budget"]'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the warning icon when well under budget', () => {
+    const { container } = render(
+      <BudgetProgressCard
+        budget={makeBudget({ limitAmount: 200 })}
+        spent={50}
+        currency="GBP"
+        onEdit={vi.fn()}
+      />,
+    );
+    expect(
+      container.querySelector('[aria-label="Approaching or over budget"]'),
+    ).not.toBeInTheDocument();
   });
 
   it('caps the progress bar width at 100% when over budget', () => {
