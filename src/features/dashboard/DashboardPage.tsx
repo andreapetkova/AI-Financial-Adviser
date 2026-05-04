@@ -116,7 +116,7 @@ export function DashboardPage() {
             </span>
           )}
         </h2>
-        <SpendingChart data={dailySpending} />
+        <SpendingChart data={dailySpending} currency={currency} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -129,12 +129,13 @@ export function DashboardPage() {
             data={categoryBreakdown}
             selectedCategory={selectedCategory}
             onCategorySelect={setSelectedCategory}
+            currency={currency}
           />
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
           <h2 className="mb-4 text-sm font-medium">Monthly Overview (last 6 months)</h2>
-          <MonthlyComparison data={monthlyComparison} />
+          <MonthlyComparison data={monthlyComparison} currency={currency} />
         </div>
       </div>
     </div>

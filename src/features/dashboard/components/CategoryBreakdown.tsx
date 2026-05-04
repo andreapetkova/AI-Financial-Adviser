@@ -1,6 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import type { CategoryBreakdownItem } from '../hooks/useSpendingData';
 import type { Category } from '@/types';
 
@@ -8,12 +9,14 @@ interface CategoryBreakdownProps {
   data: CategoryBreakdownItem[];
   selectedCategory: Category | null;
   onCategorySelect: (category: Category | null) => void;
+  currency: string;
 }
 
 export function CategoryBreakdown({
   data,
   selectedCategory,
   onCategorySelect,
+  currency,
 }: CategoryBreakdownProps) {
   if (data.length === 0) {
     return (
@@ -52,10 +55,7 @@ export function CategoryBreakdown({
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number, name: string) => [
-            `£${value.toFixed(2)}`,
-            name,
-          ]}
+          formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
         />
         <Legend />
       </PieChart>

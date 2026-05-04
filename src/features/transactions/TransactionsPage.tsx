@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Sparkles } from 'lucide-react';
 import { useTransactionsQuery, useUpdateCategoryMutation } from '@/hooks/useTransactions';
+import { useCategorizeMutation } from '@/hooks/useCategorize';
 import { useToast } from '@/context/ToastContext';
 import { SkeletonTable } from '@/components/Skeleton';
+import { InlineSpinner } from '@/components/InlineSpinner';
 import { EmptyState } from '@/components/EmptyState';
 import { TransactionTable } from './components/TransactionTable';
 import {
@@ -49,6 +51,7 @@ function applyFilters(
 export function TransactionsPage() {
   const { data: transactions, isLoading, isError } = useTransactionsQuery();
   const updateCategoryMutation = useUpdateCategoryMutation();
+  const categorizeMutation = useCategorizeMutation();
   const toast = useToast();
   const [filters, setFilters] = useState<TransactionFilterValues>(DEFAULT_FILTERS);
   const [pendingTransactionIds, setPendingTransactionIds] = useState<Set<string>>(new Set());
@@ -57,6 +60,30 @@ export function TransactionsPage() {
     () => applyFilters(transactions ?? [], filters),
     [transactions, filters],
   );
+
+  const uncategorizedTransactions = useMemo(
+    () => (transactions ?? []).filter(transaction => transaction.category == null),
+    [transactions],
+  );
+
+  function handleCategorizeAll() {
+    if (uncategorizedTransactions.length === 0) return;
+    categorizeMutation.mutate(
+      uncategorizedTransactions.map(transaction => ({
+        id: transaction.id,
+        description: transaction.description,
+        amount: transaction.amount,
+      })),
+      {
+        onSuccess: results => {
+          toast.success(`Categorized ${results.length} transaction${results.length === 1 ? '' : 's'}.`);
+        },
+        onError: () => {
+          toast.error('Failed to categorize transactions. Please try again.');
+        },
+      },
+    );
+  }
 
   function handleCategoryChange(transactionId: string, category: Category) {
     setPendingTransactionIds(previous => new Set(previous).add(transactionId));
@@ -103,15 +130,37 @@ export function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {total === 0
-            ? 'No transactions yet — upload a CSV to get started.'
-            : filtered < total
-              ? `Showing ${filtered} of ${total} transactions`
-              : `${total} transaction${total === 1 ? '' : 's'}`}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {total === 0
+              ? 'No transactions yet — upload a CSV to get started.'
+              : filtered < total
+                ? `Showing ${filtered} of ${total} transactions`
+                : `${total} transaction${total === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {uncategorizedTransactions.length > 0 && (
+          <button
+            type="button"
+            onClick={handleCategorizeAll}
+            disabled={categorizeMutation.isPending}
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {categorizeMutation.isPending ? (
+              <>
+                <InlineSpinner />
+                Categorizing…
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                Categorize {uncategorizedTransactions.length} uncategorized
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {total > 0 && (

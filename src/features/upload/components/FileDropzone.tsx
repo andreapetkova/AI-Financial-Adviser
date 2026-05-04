@@ -9,6 +9,7 @@ interface FileDropzoneProps {
 }
 
 const ACCEPTED_TYPE = '.csv';
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export function FileDropzone({ onFileSelected, error }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,6 +20,11 @@ export function FileDropzone({ onFileSelected, error }: FileDropzoneProps) {
     setFileTypeError(null);
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setFileTypeError(`"${file.name}" is not a CSV file. Please upload a .csv file.`);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+      setFileTypeError(`"${file.name}" is ${sizeMb} MB. Please upload a file under 5 MB.`);
       return;
     }
     onFileSelected(file);

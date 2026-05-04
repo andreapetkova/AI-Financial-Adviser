@@ -2,64 +2,20 @@ import type { AICategorizationResult } from '@/types';
 import { categorizationResponseSchema } from '@/lib/validators/transaction';
 import type { TransactionInput } from './types';
 import { categorizeByRules } from './rules';
+import { fetchWithRetry } from './fetchWithRetry';
 
 const BATCH_SIZE = 50;
-const MAX_RETRIES = 3;
-const BASE_DELAY_MILLISECONDS = 1000;
 
-async function delay(milliseconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-}
-
-const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
-
-function isTransientError(error: unknown): boolean {
-  if (error instanceof TypeError) return true;
-  return false;
-}
-
-async function fetchWithRetry(
+async function categorizeBatch(
   transactions: TransactionInput[],
   accessToken: string,
 ): Promise<AICategorizationResult[]> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    if (attempt > 0) {
-      await delay(BASE_DELAY_MILLISECONDS * Math.pow(2, attempt - 1));
-    }
-
-    try {
-      const response = await fetch('/api/categorize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ transactions }),
-      });
-
-      if (!response.ok) {
-        if (TRANSIENT_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
-          lastError = new Error(`Categorization failed with status ${response.status}`);
-          continue;
-        }
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(
-          (errorBody as { error?: string }).error ?? `Categorization failed with status ${response.status}`,
-        );
-      }
-
-      const data = await response.json();
-      const validated = categorizationResponseSchema.parse(data);
-      return validated.results;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (!isTransientError(error) || attempt === MAX_RETRIES) break;
-    }
-  }
-
-  throw lastError ?? new Error('Categorization failed');
+  const data = await fetchWithRetry({
+    endpoint: '/api/categorize',
+    body: { transactions },
+    accessToken,
+  });
+  return categorizationResponseSchema.parse(data).results;
 }
 
 export async function categorizeTransactions(
@@ -72,14 +28,10 @@ export async function categorizeTransactions(
     return categorized;
   }
 
-  const batches: TransactionInput[][] = [];
-  for (let index = 0; index < uncategorized.length; index += BATCH_SIZE) {
-    batches.push(uncategorized.slice(index, index + BATCH_SIZE));
-  }
-
   const allResults: AICategorizationResult[] = [...categorized];
-  for (const batch of batches) {
-    const batchResults = await fetchWithRetry(batch, accessToken);
+  for (let index = 0; index < uncategorized.length; index += BATCH_SIZE) {
+    const batch = uncategorized.slice(index, index + BATCH_SIZE);
+    const batchResults = await categorizeBatch(batch, accessToken);
     allResults.push(...batchResults);
   }
 

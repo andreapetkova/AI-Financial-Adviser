@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
   try {
     const client = new Anthropic({ apiKey });
-    const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6-20250514';
+    const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6';
 
     const message = await client.messages.create({
       model,

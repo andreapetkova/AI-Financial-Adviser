@@ -1,15 +1,8 @@
 'use client';
 
 import { TrendingDown, TrendingUp, Tag, Target } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import type { SpendingSummary } from '../hooks/useSpendingData';
-
-function formatAmount(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
 
 interface SummaryCardProps {
   icon: React.ReactNode;
@@ -64,22 +57,28 @@ export function SummaryCards({ summary, currency }: SummaryCardsProps) {
       <SummaryCard
         icon={<TrendingDown className="h-5 w-5" />}
         label="Total Spending"
-        value={formatAmount(summary.totalSpending, currency)}
+        value={formatCurrency(summary.totalSpending, currency)}
         subtext={`${summary.transactionCount} transaction${summary.transactionCount === 1 ? '' : 's'}`}
         accent="red"
       />
       <SummaryCard
         icon={<TrendingUp className="h-5 w-5" />}
         label="Total Income"
-        value={formatAmount(summary.totalIncome, currency)}
+        value={formatCurrency(summary.totalIncome, currency)}
         accent="green"
       />
       <SummaryCard
         icon={<Tag className="h-5 w-5" />}
         label="Top Category"
         value={summary.topCategoryLabel ?? '—'}
-        subtext={summary.topCategory ? 'Highest spend' : 'No data yet'}
-        accent="blue"
+        subtext={
+          summary.uncategorizedCount > 0
+            ? `${summary.uncategorizedCount} uncategorized`
+            : summary.topCategory
+              ? 'Highest spend'
+              : 'No data yet'
+        }
+        accent={summary.uncategorizedCount > 0 ? 'yellow' : 'blue'}
       />
       <SummaryCard
         icon={<Target className="h-5 w-5" />}

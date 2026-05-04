@@ -1,19 +1,11 @@
 import type { Transaction, Budget, AIInsightResponse } from '@/types';
 import { insightResponseSchema } from '@/lib/validators/transaction';
-
-const MAX_RETRIES = 3;
-const BASE_DELAY_MILLISECONDS = 1000;
+import { fetchWithRetry } from './fetchWithRetry';
 
 interface SpendingEntry {
   category: string;
   total: number;
   count: number;
-}
-
-const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
-
-async function delay(milliseconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 function buildSpendingSummary(transactions: Transaction[]): {
@@ -63,41 +55,11 @@ export async function generateInsights(
     transactionCount,
   };
 
-  let lastError: Error | null = null;
+  const data = await fetchWithRetry({
+    endpoint: '/api/insights',
+    body: requestBody,
+    accessToken,
+  });
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    if (attempt > 0) {
-      await delay(BASE_DELAY_MILLISECONDS * Math.pow(2, attempt - 1));
-    }
-
-    try {
-      const response = await fetch('/api/insights', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        if (TRANSIENT_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
-          lastError = new Error(`Insights generation failed with status ${response.status}`);
-          continue;
-        }
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(
-          (errorBody as { error?: string }).error ?? `Insights generation failed with status ${response.status}`,
-        );
-      }
-
-      const data = await response.json();
-      return insightResponseSchema.parse(data);
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (!(error instanceof TypeError) || attempt === MAX_RETRIES) break;
-    }
-  }
-
-  throw lastError ?? new Error('Insights generation failed');
+  return insightResponseSchema.parse(data);
 }

@@ -2,6 +2,7 @@
 
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
+import { useCategorizeMutation } from '@/hooks/useCategorize';
 import { useToast } from '@/context/ToastContext';
 import { createUpload, upsertTransactions } from '@/lib/supabase/queries';
 import type { TransactionInsert } from '@/lib/supabase/types';
@@ -13,6 +14,7 @@ import { CheckCircle } from 'lucide-react';
 export function UploadPage() {
   const { user } = useAuth();
   const upload = useFileUpload();
+  const categorizeMutation = useCategorizeMutation();
   const toast = useToast();
 
   async function handleConfirm() {
@@ -39,11 +41,30 @@ export function UploadPage() {
         upload_batch_id: uploadRecord.id,
       }));
 
-      await upsertTransactions(transactionInserts);
-      upload.setSavedCount(validRows.length);
+      const savedTransactions = await upsertTransactions(transactionInserts);
+      upload.setSavedCount(savedTransactions.length);
       upload.setStep('success');
       toast.success(
-        `${validRows.length} ${validRows.length === 1 ? 'transaction' : 'transactions'} saved successfully.`,
+        `${savedTransactions.length} ${savedTransactions.length === 1 ? 'transaction' : 'transactions'} saved.`,
+      );
+
+      // Categorize in the background — failure doesn't roll back the save.
+      categorizeMutation.mutate(
+        savedTransactions.map(transaction => ({
+          id: transaction.id,
+          description: transaction.description,
+          amount: transaction.amount,
+        })),
+        {
+          onSuccess: () => {
+            toast.success('Categorization complete.');
+          },
+          onError: () => {
+            toast.error(
+              'Could not auto-categorize transactions. You can edit categories on the Transactions page.',
+            );
+          },
+        },
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save transactions';
@@ -102,6 +123,9 @@ export function UploadPage() {
               {upload.savedCount} {upload.savedCount === 1 ? 'transaction' : 'transactions'} saved
               successfully.
             </p>
+            {categorizeMutation.isPending && (
+              <p className="mt-2 text-xs text-muted-foreground">Categorizing in background…</p>
+            )}
           </div>
           <button
             type="button"

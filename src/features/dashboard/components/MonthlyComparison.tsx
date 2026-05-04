@@ -10,13 +10,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import type { MonthlyComparisonItem } from '../hooks/useSpendingData';
 
 interface MonthlyComparisonProps {
   data: MonthlyComparisonItem[];
+  currency: string;
 }
 
-export function MonthlyComparison({ data }: MonthlyComparisonProps) {
+export function MonthlyComparison({ data, currency }: MonthlyComparisonProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
@@ -32,10 +34,14 @@ export function MonthlyComparison({ data }: MonthlyComparisonProps) {
         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
         <YAxis
           tick={{ fontSize: 11 }}
-          tickFormatter={(value: number) => `£${value.toFixed(0)}`}
-          width={52}
+          tickFormatter={(value: number) =>
+            formatCurrency(value, currency, { maximumFractionDigits: 0 })
+          }
+          width={68}
         />
-        <Tooltip formatter={(value: number, name: string) => [`£${value.toFixed(2)}`, name]} />
+        <Tooltip
+          formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
+        />
         <Legend />
         <Bar dataKey="spending" name="Spending" fill="#ef4444" radius={[3, 3, 0, 0]} />
         <Bar dataKey="income" name="Income" fill="#22c55e" radius={[3, 3, 0, 0]} />

@@ -2,15 +2,8 @@
 
 import { AlertTriangle, Pencil } from 'lucide-react';
 import { CATEGORY_LABELS } from '@/lib/categories';
+import { formatCurrency } from '@/lib/utils';
 import type { Budget } from '@/types';
-
-function formatAmount(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
 
 interface BudgetProgressCardProps {
   budget: Budget;
@@ -37,8 +30,8 @@ export function BudgetProgressCard({
       : 'bg-green-500';
 
   const statusText = isOverBudget
-    ? `Over budget by ${formatAmount(spent - budget.limitAmount, currency)}`
-    : `${formatAmount(budget.limitAmount - spent, currency)} remaining`;
+    ? `Over budget by ${formatCurrency(spent - budget.limitAmount, currency)}`
+    : `${formatCurrency(budget.limitAmount - spent, currency)} remaining`;
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
@@ -74,7 +67,7 @@ export function BudgetProgressCard({
           {statusText}
         </span>
         <span className="tabular-nums">
-          {formatAmount(spent, currency)} / {formatAmount(budget.limitAmount, currency)}
+          {formatCurrency(spent, currency)} / {formatCurrency(budget.limitAmount, currency)}
         </span>
       </div>
     </div>

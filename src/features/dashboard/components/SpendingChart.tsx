@@ -10,13 +10,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import type { DailySpendingItem } from '../hooks/useSpendingData';
 
 interface SpendingChartProps {
   data: DailySpendingItem[];
+  currency: string;
 }
 
-export function SpendingChart({ data }: SpendingChartProps) {
+export function SpendingChart({ data, currency }: SpendingChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
@@ -36,11 +38,13 @@ export function SpendingChart({ data }: SpendingChartProps) {
         />
         <YAxis
           tick={{ fontSize: 11 }}
-          tickFormatter={(value: number) => `£${value.toFixed(0)}`}
-          width={52}
+          tickFormatter={(value: number) =>
+            formatCurrency(value, currency, { maximumFractionDigits: 0 })
+          }
+          width={68}
         />
         <Tooltip
-          formatter={(value: number, name: string) => [`£${value.toFixed(2)}`, name]}
+          formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
           labelFormatter={(label: string) =>
             new Date(label).toLocaleDateString('en-GB', {
               day: 'numeric',

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { TextInput } from '@/components/TextInput';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -16,6 +17,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmationSentTo, setConfirmationSentTo] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -34,13 +36,40 @@ export default function SignUpPage() {
     setSubmitting(true);
 
     try {
-      await signUp(email, password);
-      router.replace('/dashboard');
+      const { requiresEmailConfirmation } = await signUp(email, password);
+      if (requiresEmailConfirmation) {
+        setConfirmationSentTo(email);
+      } else {
+        router.replace('/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account');
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (confirmationSentTo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <Mail className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Check your email</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              We sent a confirmation link to <span className="font-medium text-foreground">{confirmationSentTo}</span>.
+              Click the link to activate your account, then sign in.
+            </p>
+          </div>
+          <Link
+            href="/login"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Back to sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

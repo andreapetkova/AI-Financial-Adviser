@@ -86,13 +86,15 @@ export async function updateTransactionCategory(
   category: Category,
   manuallyEdited: boolean = true,
 ): Promise<Transaction> {
+  const patch: Record<string, unknown> = {
+    category,
+    manually_edited: manuallyEdited,
+  };
+  if (manuallyEdited) patch.confidence = 1.0;
+
   const { data, error } = await supabase
     .from('transactions')
-    .update({
-      category,
-      manually_edited: manuallyEdited,
-      confidence: manuallyEdited ? 1.0 : undefined,
-    })
+    .update(patch)
     .eq('id', transactionId)
     .select()
     .single();
@@ -103,10 +105,20 @@ export async function updateTransactionCategory(
 
 const UPDATE_BATCH_SIZE = 10;
 
+export class BatchUpdateError extends Error {
+  constructor(
+    public readonly failedIds: string[],
+    public readonly totalCount: number,
+  ) {
+    super(`Failed to update ${failedIds.length} of ${totalCount} transactions`);
+    this.name = 'BatchUpdateError';
+  }
+}
+
 export async function updateTransactionCategories(
   updates: Array<{ id: string; category: Category; confidence: number }>,
 ): Promise<void> {
-  let failureCount = 0;
+  const failedIds: string[] = [];
 
   for (let index = 0; index < updates.length; index += UPDATE_BATCH_SIZE) {
     const batch = updates.slice(index, index + UPDATE_BATCH_SIZE);
@@ -123,11 +135,15 @@ export async function updateTransactionCategories(
       ),
     );
 
-    failureCount += results.filter(result => result.status === 'rejected').length;
+    results.forEach((result, batchIndex) => {
+      if (result.status === 'rejected') {
+        failedIds.push(batch[batchIndex].id);
+      }
+    });
   }
 
-  if (failureCount > 0) {
-    throw new Error(`Failed to update ${failureCount} of ${updates.length} transactions`);
+  if (failedIds.length > 0) {
+    throw new BatchUpdateError(failedIds, updates.length);
   }
 }
 

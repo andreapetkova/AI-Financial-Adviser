@@ -22,6 +22,7 @@ export interface SpendingSummary {
   transactionCount: number;
   topCategory: Category | null;
   topCategoryLabel: string | null;
+  uncategorizedCount: number;
   budgetsOnTrack: number;
   budgetsTotal: number;
 }
@@ -57,12 +58,17 @@ export function useSpendingSummary(
       if (spent <= budget.limitAmount) budgetsOnTrack++;
     }
 
+    const uncategorizedCount = monthTransactions.filter(
+      t => t.amount < 0 && t.category == null,
+    ).length;
+
     return {
       totalSpending,
       totalIncome,
       transactionCount: monthTransactions.length,
       topCategory,
       topCategoryLabel: topCategory ? CATEGORY_LABELS[topCategory] : null,
+      uncategorizedCount,
       budgetsOnTrack,
       budgetsTotal: budgets.length,
     };

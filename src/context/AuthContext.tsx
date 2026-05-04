@@ -11,8 +11,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let listenerHasFired = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
+        listenerHasFired = true;
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setLoading(false);
@@ -20,6 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      // Guard against overwriting a newer session set by onAuthStateChange.
+      if (listenerHasFired) return;
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
@@ -34,8 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
+    return { requiresEmailConfirmation: data.session === null };
   }
 
   async function signOut() {
