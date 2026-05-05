@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { SubmitButton } from '@/components/SubmitButton';
 import { FormErrorAlert } from '@/components/FormErrorAlert';
 import type { ColumnMapping } from '@/lib/parsers/csv';
@@ -6,6 +7,7 @@ import type { ColumnMapping } from '@/lib/parsers/csv';
 interface ColumnMapperProps {
   headers: string[];
   onConfirm: (mapping: ColumnMapping) => void;
+  onAIParse?: () => void;
 }
 
 function MappingSelect({ id, label, required, headers, value, onChange }: {
@@ -36,7 +38,7 @@ function MappingSelect({ id, label, required, headers, value, onChange }: {
 
 const UNSET = '';
 
-export function ColumnMapper({ headers, onConfirm }: ColumnMapperProps) {
+export function ColumnMapper({ headers, onConfirm, onAIParse }: ColumnMapperProps) {
   const [date, setDate] = useState(UNSET);
   const [description, setDescription] = useState(UNSET);
   const [amount, setAmount] = useState(UNSET);
@@ -70,22 +72,43 @@ export function ColumnMapper({ headers, onConfirm }: ColumnMapperProps) {
       <div>
         <h2 className="text-lg font-semibold">Map your columns</h2>
         <p className="text-sm text-muted-foreground">
-          {"We couldn't auto-detect your CSV columns. Please map them manually."}
+          {"We couldn't auto-detect your CSV columns. Map them manually or let AI analyze the file."}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <FormErrorAlert message={error} />}
+      {onAIParse && (
+        <button
+          type="button"
+          onClick={onAIParse}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 px-4 py-4 text-sm font-medium text-primary hover:border-primary hover:bg-primary/10 transition-colors"
+        >
+          <Sparkles className="h-5 w-5" aria-hidden="true" />
+          Let AI parse this file automatically
+        </button>
+      )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <MappingSelect id="map-date" label="Date" required headers={headers} value={date} onChange={setDate} />
-          <MappingSelect id="map-description" label="Description" required headers={headers} value={description} onChange={setDescription} />
-          <MappingSelect id="map-amount" label="Amount" required headers={headers} value={amount} onChange={setAmount} />
-          <MappingSelect id="map-currency" label="Currency" headers={headers} value={currency} onChange={setCurrency} />
-        </div>
+      <div className="relative">
+        {onAIParse && (
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or map manually</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+        )}
 
-        <SubmitButton className="w-auto">Confirm mapping</SubmitButton>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <FormErrorAlert message={error} />}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MappingSelect id="map-date" label="Date" required headers={headers} value={date} onChange={setDate} />
+            <MappingSelect id="map-description" label="Description" required headers={headers} value={description} onChange={setDescription} />
+            <MappingSelect id="map-amount" label="Amount" required headers={headers} value={amount} onChange={setAmount} />
+            <MappingSelect id="map-currency" label="Currency" headers={headers} value={currency} onChange={setCurrency} />
+          </div>
+
+          <SubmitButton className="w-auto">Confirm mapping</SubmitButton>
+        </form>
+      </div>
     </div>
   );
 }

@@ -9,10 +9,11 @@ import type { TransactionInsert } from '@/lib/supabase/types';
 import { FileDropzone } from './components/FileDropzone';
 import { ColumnMapper } from './components/ColumnMapper';
 import { ParsePreview } from './components/ParsePreview';
-import { CheckCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/InlineSpinner';
+import { CheckCircle, Sparkles } from 'lucide-react';
 
 export function UploadPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const upload = useFileUpload();
   const categorizeMutation = useCategorizeMutation();
   const toast = useToast();
@@ -48,7 +49,6 @@ export function UploadPage() {
         `${savedTransactions.length} ${savedTransactions.length === 1 ? 'transaction' : 'transactions'} saved.`,
       );
 
-      // Categorize in the background — failure doesn't roll back the save.
       categorizeMutation.mutate(
         savedTransactions.map(transaction => ({
           id: transaction.id,
@@ -74,8 +74,15 @@ export function UploadPage() {
     }
   }
 
+  function handleAIParse() {
+    if (!session?.access_token) return;
+    upload.handleAIParse(session.access_token);
+  }
+
   function handleBack() {
-    if (!upload.autoDetected) {
+    if (upload.aiParsed) {
+      upload.setStep('mapping');
+    } else if (!upload.autoDetected) {
       upload.setStep('mapping');
     } else {
       upload.reset();
@@ -102,7 +109,21 @@ export function UploadPage() {
         <ColumnMapper
           headers={upload.headers}
           onConfirm={upload.handleMappingConfirmed}
+          onAIParse={handleAIParse}
         />
+      )}
+
+      {upload.step === 'analyzing' && (
+        <div className="flex flex-col items-center gap-4 rounded-lg border bg-card p-12 text-center">
+          <Sparkles className="h-10 w-10 text-primary animate-pulse" aria-hidden="true" />
+          <div>
+            <p className="text-lg font-semibold">AI is analyzing your file</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Detecting format, encoding, and extracting transactions...
+            </p>
+          </div>
+          <InlineSpinner />
+        </div>
       )}
 
       {(upload.step === 'preview' || upload.step === 'saving') && upload.parseResult && (
@@ -111,6 +132,7 @@ export function UploadPage() {
           onConfirm={handleConfirm}
           onBack={handleBack}
           saving={upload.step === 'saving'}
+          aiParsed={upload.aiParsed}
         />
       )}
 

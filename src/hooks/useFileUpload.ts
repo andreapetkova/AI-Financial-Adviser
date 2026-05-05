@@ -3,12 +3,14 @@ import {
   parseCSVFile,
   detectColumnMapping,
   mapAndValidateRows,
+  readFileWithEncoding,
   type ColumnMapping,
   type ParseResult,
 } from '@/lib/parsers/csv';
+import { parseCSVWithAI } from '@/lib/ai/csvParser';
 import type { ParsedCSVRow } from '@/types';
 
-export type UploadStep = 'dropzone' | 'mapping' | 'preview' | 'saving' | 'success';
+export type UploadStep = 'dropzone' | 'mapping' | 'analyzing' | 'preview' | 'saving' | 'success';
 
 interface UploadState {
   step: UploadStep;
@@ -17,6 +19,7 @@ interface UploadState {
   rawRows: Record<string, string>[];
   columnMapping: ColumnMapping | null;
   autoDetected: boolean;
+  aiParsed: boolean;
   parseResult: ParseResult | null;
   savedCount: number;
   error: string | null;
@@ -29,6 +32,7 @@ const INITIAL_STATE: UploadState = {
   rawRows: [],
   columnMapping: null,
   autoDetected: false,
+  aiParsed: false,
   parseResult: null,
   savedCount: 0,
   error: null,
@@ -52,29 +56,74 @@ export function useFileUpload() {
 
       if (detectedMapping) {
         const parseResult = mapAndValidateRows(rows, detectedMapping);
-        setState({
-          ...INITIAL_STATE,
-          step: 'preview',
-          file,
-          headers,
-          rawRows: rows,
-          columnMapping: detectedMapping,
-          autoDetected: true,
-          parseResult,
-        });
-      } else {
-        setState({
-          ...INITIAL_STATE,
-          step: 'mapping',
-          file,
-          headers,
-          rawRows: rows,
-        });
+
+        if (parseResult.valid.length > 0) {
+          setState({
+            ...INITIAL_STATE,
+            step: 'preview',
+            file,
+            headers,
+            rawRows: rows,
+            columnMapping: detectedMapping,
+            autoDetected: true,
+            aiParsed: false,
+            parseResult,
+          });
+          return;
+        }
       }
+
+      // Standard parsing couldn't detect columns — offer manual mapping
+      // but store the file for potential AI parsing
+      setState({
+        ...INITIAL_STATE,
+        step: 'mapping',
+        file,
+        headers,
+        rawRows: rows,
+      });
     } catch (error) {
       setState((previous) => ({
         ...previous,
         error: error instanceof Error ? error.message : 'Failed to parse CSV file',
+      }));
+    }
+  }
+
+  async function handleAIParse(accessToken: string) {
+    if (!state.file) return;
+
+    setState((previous) => ({ ...previous, step: 'analyzing', error: null }));
+
+    try {
+      const rawText = await readFileWithEncoding(state.file);
+      const parsed = await parseCSVWithAI(rawText, accessToken);
+
+      if (parsed.length === 0) {
+        setState((previous) => ({
+          ...previous,
+          step: 'mapping',
+          error: 'AI could not extract any transactions from the file. Please map columns manually.',
+        }));
+        return;
+      }
+
+      const parseResult: ParseResult = { valid: parsed, errors: [] };
+
+      setState((previous) => ({
+        ...previous,
+        step: 'preview',
+        aiParsed: true,
+        autoDetected: true,
+        parseResult,
+      }));
+    } catch (error) {
+      setState((previous) => ({
+        ...previous,
+        step: 'mapping',
+        error: error instanceof Error
+          ? `AI parsing failed: ${error.message}`
+          : 'AI parsing failed. Please map columns manually.',
       }));
     }
   }
@@ -86,6 +135,7 @@ export function useFileUpload() {
       step: 'preview',
       columnMapping: mapping,
       autoDetected: false,
+      aiParsed: false,
       parseResult,
     }));
   }
@@ -113,6 +163,7 @@ export function useFileUpload() {
   return {
     ...state,
     handleFileSelected,
+    handleAIParse,
     handleMappingConfirmed,
     getValidRows,
     reset,

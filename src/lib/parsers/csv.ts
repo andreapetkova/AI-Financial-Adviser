@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import { csvRowSchema } from '@/lib/validators/transaction';
+import { readFileAsText } from './encoding';
 import type { ParsedCSVRow } from '@/types';
 
 export interface ColumnMapping {
@@ -48,24 +49,27 @@ export function detectColumnMapping(headers: string[]): ColumnMapping | null {
   return { date, description, amount, currency };
 }
 
-export function parseCSVFile(file: File): Promise<{ rows: Record<string, string>[]; headers: string[] }> {
-  return new Promise((resolve, reject) => {
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
-      complete(results) {
-        if (!results.meta.fields || results.meta.fields.length === 0) {
-          reject(new Error('CSV file has no headers'));
-          return;
-        }
-        resolve({ rows: results.data, headers: results.meta.fields });
-      },
-      error(error: Error) {
-        reject(error);
-      },
-    });
+export async function readFileWithEncoding(file: File): Promise<string> {
+  return readFileAsText(file);
+}
+
+function parseCSVText(text: string): { rows: Record<string, string>[]; headers: string[] } {
+  const result = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (header) => header.trim(),
   });
+
+  if (!result.meta.fields || result.meta.fields.length === 0) {
+    throw new Error('CSV file has no headers');
+  }
+
+  return { rows: result.data, headers: result.meta.fields };
+}
+
+export async function parseCSVFile(file: File): Promise<{ rows: Record<string, string>[]; headers: string[] }> {
+  const text = await readFileAsText(file);
+  return parseCSVText(text);
 }
 
 export function mapAndValidateRows(

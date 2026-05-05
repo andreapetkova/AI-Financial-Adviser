@@ -1,15 +1,17 @@
 import type { ParseResult } from '@/lib/parsers/csv';
 import { SubmitButton } from '@/components/SubmitButton';
 import { classnames } from '@/lib/utils';
+import { Sparkles } from 'lucide-react';
 
 interface ParsePreviewProps {
   result: ParseResult;
   onConfirm: () => void;
   onBack: () => void;
   saving: boolean;
+  aiParsed?: boolean;
 }
 
-export function ParsePreview({ result, onConfirm, onBack, saving }: ParsePreviewProps) {
+export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: ParsePreviewProps) {
   const { valid, errors } = result;
   const hasErrors = errors.length > 0;
   const hasCurrency = valid.some((row) => row.currency);
@@ -19,14 +21,22 @@ export function ParsePreview({ result, onConfirm, onBack, saving }: ParsePreview
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Preview</h2>
-          <p className="text-sm text-muted-foreground">
-            {valid.length} valid {valid.length === 1 ? 'row' : 'rows'}
-            {hasErrors && (
-              <span className="text-destructive">
-                {`, ${errors.length} ${errors.length === 1 ? 'error' : 'errors'}`}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {valid.length} valid {valid.length === 1 ? 'row' : 'rows'}
+              {hasErrors && (
+                <span className="text-destructive">
+                  {`, ${errors.length} ${errors.length === 1 ? 'error' : 'errors'}`}
+                </span>
+              )}
+            </span>
+            {aiParsed && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <Sparkles className="h-3 w-3" aria-hidden="true" />
+                AI parsed
               </span>
             )}
-          </p>
+          </div>
         </div>
       </div>
 
