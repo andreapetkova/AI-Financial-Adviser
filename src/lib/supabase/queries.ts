@@ -115,6 +115,11 @@ export class BatchUpdateError extends Error {
   }
 }
 
+/**
+ * Bulk-applies AI category results. Refuses to overwrite manually-edited
+ * transactions: the WHERE clause includes `manually_edited = false` so
+ * user-corrected categories are preserved even if the caller forgets to filter.
+ */
 export async function updateTransactionCategories(
   updates: Array<{ id: string; category: Category; confidence: number }>,
 ): Promise<void> {
@@ -131,12 +136,13 @@ export async function updateTransactionCategories(
             confidence: update.confidence,
             manually_edited: false,
           })
-          .eq('id', update.id),
+          .eq('id', update.id)
+          .eq('manually_edited', false),
       ),
     );
 
     results.forEach((result, batchIndex) => {
-      if (result.status === 'rejected') {
+      if (result.status === 'rejected' || result.value.error) {
         failedIds.push(batch[batchIndex].id);
       }
     });
@@ -198,7 +204,17 @@ export async function getInsights(
 
 export async function saveInsights(
   insights: InsightInsert[],
+  userId: string,
+  month: string,
 ): Promise<Insight[]> {
+  const { error: deleteError } = await supabase
+    .from('insights')
+    .delete()
+    .eq('user_id', userId)
+    .eq('month', month);
+
+  if (deleteError) throw deleteError;
+
   const { data, error } = await supabase
     .from('insights')
     .insert(insights)

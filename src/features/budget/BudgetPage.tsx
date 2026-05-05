@@ -15,7 +15,7 @@ export function BudgetPage() {
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactionsQuery();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
 
-  const currency = transactions[0]?.currency ?? 'GBP';
+  const currency = transactions[0]?.currency ?? 'USD';
 
   const categorySpending = useMemo(() => {
     const map = new Map<Category, number>();

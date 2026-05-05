@@ -26,16 +26,18 @@ export function useGenerateInsightsMutation() {
       transactions,
       budgets,
       month,
+      currency,
     }: {
       transactions: Transaction[];
       budgets: Budget[];
       month: string;
+      currency?: string;
     }): Promise<AIInsightResponse> => {
       if (!session?.access_token || !user) {
         throw new Error('Not authenticated');
       }
 
-      const response = await generateInsights(transactions, budgets, month, session.access_token);
+      const response = await generateInsights(transactions, budgets, month, session.access_token, currency);
 
       await saveInsights(
         response.insights.map(insight => ({
@@ -44,6 +46,8 @@ export function useGenerateInsightsMutation() {
           type: insight.type,
           month: response.month,
         })),
+        user.id,
+        response.month,
       );
 
       return response;

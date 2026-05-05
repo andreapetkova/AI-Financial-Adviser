@@ -18,6 +18,7 @@ const requestSchema = z.object({
   month: z.string().min(1),
   totalSpent: z.number(),
   transactionCount: z.number(),
+  currency: z.string().default('USD'),
 });
 
 const SYSTEM_PROMPT = `You are a personal finance advisor. Analyze spending data and provide actionable insights.
@@ -36,17 +37,18 @@ Guidelines:
 - Return valid JSON only, no markdown or explanation`;
 
 function buildInsightsPrompt(data: z.infer<typeof requestSchema>): string {
+  const { currency } = data;
   const spendingLines = data.spending
-    .map(entry => `- ${entry.category}: $${entry.total.toFixed(2)} (${entry.count} transactions)`)
+    .map(entry => `- ${entry.category}: ${currency} ${entry.total.toFixed(2)} (${entry.count} transactions)`)
     .join('\n');
 
   const budgetLines = data.budgets.length > 0
-    ? data.budgets.map(budget => `- ${budget.category}: $${budget.limitAmount.toFixed(2)} limit`).join('\n')
+    ? data.budgets.map(budget => `- ${budget.category}: ${currency} ${budget.limitAmount.toFixed(2)} limit`).join('\n')
     : 'No budgets set';
 
   return `Analyze this spending data for ${data.month}:
 
-Total spent: $${data.totalSpent.toFixed(2)} across ${data.transactionCount} transactions
+Total spent: ${currency} ${data.totalSpent.toFixed(2)} across ${data.transactionCount} transactions
 
 Spending by category:
 ${spendingLines}
@@ -54,7 +56,7 @@ ${spendingLines}
 Budgets:
 ${budgetLines}
 
-Return only the JSON object with insights:`;
+Use ${currency} as the currency in your response. Return only the JSON object with insights:`;
 }
 
 export async function POST(request: Request) {
@@ -78,7 +80,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
   }
 
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Malformed JSON body' }, { status: 400 });
+  }
+
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });

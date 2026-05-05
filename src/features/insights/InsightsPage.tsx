@@ -58,6 +58,7 @@ export function InsightsPage() {
     [transactions, selectedMonth],
   );
 
+  const currency = transactions[0]?.currency ?? 'USD';
   const hasTransactions = monthTransactions.length > 0;
 
   function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -68,7 +69,7 @@ export function InsightsPage() {
   function handleGenerate() {
     resetMutation();
     generateInsights(
-      { transactions: monthTransactions, budgets, month: selectedMonth },
+      { transactions: monthTransactions, budgets, month: selectedMonth, currency },
       {
         onSuccess: (generated) => {
           const count = generated.insights.length;

@@ -44,7 +44,7 @@ export function DashboardPage() {
     useTransactionsQuery();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
 
-  const currency = transactions[0]?.currency ?? 'GBP';
+  const currency = transactions[0]?.currency ?? 'USD';
 
   const chartTransactions = useMemo(
     () => selectedCategory ? transactions.filter(t => t.category === selectedCategory) : transactions,

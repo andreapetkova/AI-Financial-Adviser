@@ -41,6 +41,7 @@ export async function generateInsights(
   budgets: Budget[],
   month: string,
   accessToken: string,
+  currency: string = 'USD',
 ): Promise<AIInsightResponse> {
   const { spending, totalSpent, transactionCount } = buildSpendingSummary(transactions);
 
@@ -53,6 +54,7 @@ export async function generateInsights(
     month,
     totalSpent,
     transactionCount,
+    currency,
   };
 
   const data = await fetchWithRetry({
