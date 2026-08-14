@@ -26,8 +26,8 @@ export function BudgetProgressCard({
   const barColor = isOverBudget || isNearLimit
     ? 'bg-red-500'
     : percentUsed >= 75
-      ? 'bg-amber-500'
-      : 'bg-primary';
+      ? 'bg-yellow-500'
+      : 'bg-green-500';
 
   const statusText = isOverBudget
     ? `Over budget by ${formatCurrency(spent - budget.limitAmount, currency)}`

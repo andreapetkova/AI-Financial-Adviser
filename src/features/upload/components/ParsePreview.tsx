@@ -120,7 +120,7 @@ export function ParsePreview({
                     className={classnames(
                       'border-b last:border-b-0',
                       isReview
-                        ? 'bg-purple-50/70'
+                        ? 'border-l-4 border-l-purple-600 bg-purple-200/80'
                         : index % 2 === 0
                           ? 'bg-background'
                           : 'bg-muted/25',
@@ -131,29 +131,37 @@ export function ParsePreview({
                     <td className="px-4 py-2 text-right tabular-nums">{row.amount.toFixed(2)}</td>
                     {hasCurrency && <td className="px-4 py-2">{row.currency ?? ''}</td>}
                     <td className="px-4 py-2">
-                      <select
-                        value={row.category ?? ''}
-                        onChange={(event) => {
-                          if (event.target.value) {
-                            onUpdateCategory(index, event.target.value as Category);
-                          }
-                        }}
-                        className={classnames(
-                          'rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2',
-                          isReview
-                            ? 'border-purple-300 bg-white focus:ring-purple-400'
-                            : 'border-input bg-background focus:ring-ring',
+                      <div className="flex items-center gap-1.5">
+                        {isReview && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 shrink-0 text-purple-700"
+                            aria-label="Needs review"
+                          />
                         )}
-                      >
-                        {!row.category && (
-                          <option value="">Select category…</option>
-                        )}
-                        {CATEGORIES.map((category) => (
-                          <option key={category} value={category}>
-                            {CATEGORY_LABELS[category]}
-                          </option>
-                        ))}
-                      </select>
+                        <select
+                          value={row.category ?? ''}
+                          onChange={(event) => {
+                            if (event.target.value) {
+                              onUpdateCategory(index, event.target.value as Category);
+                            }
+                          }}
+                          className={classnames(
+                            'rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2',
+                            isReview
+                              ? 'border-2 border-purple-600 bg-white font-medium text-purple-900 focus:ring-purple-400'
+                              : 'border-input bg-background focus:ring-ring',
+                          )}
+                        >
+                          {!row.category && (
+                            <option value="">Select category…</option>
+                          )}
+                          {CATEGORIES.map((category) => (
+                            <option key={category} value={category}>
+                              {CATEGORY_LABELS[category]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                   </tr>
                 );
