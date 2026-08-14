@@ -140,3 +140,18 @@ export interface UploadInsert {
   row_count: number;
   created_at?: string;
 }
+
+export interface CategorizationRuleRow {
+  id: string;
+  user_id: string;
+  description: string;
+  category: string;
+  last_confirmed_at: string;
+}
+
+export interface CategorizationRuleInsert {
+  user_id: string;
+  description: string;
+  category: string;
+  last_confirmed_at?: string;
+}

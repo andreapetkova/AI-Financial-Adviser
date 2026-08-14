@@ -1,26 +1,16 @@
 import { useState } from 'react';
-import {
-  parseCSVFile,
-  detectColumnMapping,
-  mapAndValidateRows,
-  readFileWithEncoding,
-  type ColumnMapping,
-  type ParseResult,
-} from '@/lib/parsers/csv';
-import { parseCSVWithAI } from '@/lib/ai/csvParser';
-import type { ParsedCSVRow } from '@/types';
+import type { ParseResult } from '@/lib/parsers/csv';
+import { parsePDFWithAI, type LearnedRule } from '@/lib/ai/csvParser';
+import type { CategorizedRow, Category } from '@/types';
 
-export type UploadStep = 'dropzone' | 'mapping' | 'analyzing' | 'preview' | 'saving' | 'success';
+export type UploadStep = 'dropzone' | 'analyzing' | 'preview' | 'saving' | 'success';
 
 interface UploadState {
   step: UploadStep;
   file: File | null;
-  headers: string[];
-  rawRows: Record<string, string>[];
-  columnMapping: ColumnMapping | null;
-  autoDetected: boolean;
   aiParsed: boolean;
   parseResult: ParseResult | null;
+  categorizedRows: CategorizedRow[];
   savedCount: number;
   error: string | null;
 }
@@ -28,120 +18,77 @@ interface UploadState {
 const INITIAL_STATE: UploadState = {
   step: 'dropzone',
   file: null,
-  headers: [],
-  rawRows: [],
-  columnMapping: null,
-  autoDetected: false,
   aiParsed: false,
   parseResult: null,
+  categorizedRows: [],
   savedCount: 0,
   error: null,
 };
 
+async function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // result is "data:application/pdf;base64,<data>" — strip the prefix
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = () => reject(new Error('Failed to read PDF file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function useFileUpload() {
   const [state, setState] = useState<UploadState>(INITIAL_STATE);
 
-  async function handleFileSelected(file: File) {
+  function handleFileSelected(file: File) {
+    setState({ ...INITIAL_STATE, file, step: 'analyzing' });
+  }
+
+  async function handleAIParse(accessToken: string, learnedRules: LearnedRule[] = []) {
+    if (!state.file) return;
+
     setState((previous) => ({ ...previous, error: null }));
 
     try {
-      const { rows, headers } = await parseCSVFile(file);
+      const pdfBase64 = await readFileAsBase64(state.file);
+      const categorizedRows = await parsePDFWithAI(pdfBase64, accessToken, learnedRules);
 
-      if (rows.length === 0) {
-        setState((previous) => ({ ...previous, error: 'CSV file contains no data rows' }));
-        return;
-      }
-
-      const detectedMapping = detectColumnMapping(headers);
-
-      if (detectedMapping) {
-        const parseResult = mapAndValidateRows(rows, detectedMapping);
-
-        if (parseResult.valid.length > 0) {
-          setState({
-            ...INITIAL_STATE,
-            step: 'preview',
-            file,
-            headers,
-            rawRows: rows,
-            columnMapping: detectedMapping,
-            autoDetected: true,
-            aiParsed: false,
-            parseResult,
-          });
-          return;
-        }
-      }
-
-      // Standard parsing couldn't detect columns — offer manual mapping
-      // but store the file for potential AI parsing
-      setState({
-        ...INITIAL_STATE,
-        step: 'mapping',
-        file,
-        headers,
-        rawRows: rows,
-      });
-    } catch (error) {
-      setState((previous) => ({
-        ...previous,
-        error: error instanceof Error ? error.message : 'Failed to parse CSV file',
-      }));
-    }
-  }
-
-  async function handleAIParse(accessToken: string) {
-    if (!state.file) return;
-
-    setState((previous) => ({ ...previous, step: 'analyzing', error: null }));
-
-    try {
-      const rawText = await readFileWithEncoding(state.file);
-      const parsed = await parseCSVWithAI(rawText, accessToken);
-
-      if (parsed.length === 0) {
+      if (categorizedRows.length === 0) {
         setState((previous) => ({
           ...previous,
-          step: 'mapping',
-          error: 'AI could not extract any transactions from the file. Please map columns manually.',
+          step: 'dropzone',
+          error: 'AI could not extract any transactions from this PDF.',
         }));
         return;
       }
 
-      const parseResult: ParseResult = { valid: parsed, errors: [] };
+      const parseResult: ParseResult = { valid: categorizedRows, errors: [] };
 
       setState((previous) => ({
         ...previous,
         step: 'preview',
         aiParsed: true,
-        autoDetected: true,
         parseResult,
+        categorizedRows,
       }));
     } catch (error) {
       setState((previous) => ({
         ...previous,
-        step: 'mapping',
+        step: 'dropzone',
         error: error instanceof Error
-          ? `AI parsing failed: ${error.message}`
-          : 'AI parsing failed. Please map columns manually.',
+          ? `Failed to parse PDF: ${error.message}`
+          : 'Failed to parse PDF. Please try again.',
       }));
     }
   }
 
-  function handleMappingConfirmed(mapping: ColumnMapping) {
-    const parseResult = mapAndValidateRows(state.rawRows, mapping);
-    setState((previous) => ({
-      ...previous,
-      step: 'preview',
-      columnMapping: mapping,
-      autoDetected: false,
-      aiParsed: false,
-      parseResult,
-    }));
-  }
-
-  function getValidRows(): ParsedCSVRow[] {
-    return state.parseResult?.valid ?? [];
+  function updateRowCategory(index: number, category: Category) {
+    setState((previous) => {
+      const updated = [...previous.categorizedRows];
+      updated[index] = { ...updated[index], category, confidence: null, manuallyEdited: true };
+      return { ...previous, categorizedRows: updated };
+    });
   }
 
   function reset() {
@@ -164,8 +111,7 @@ export function useFileUpload() {
     ...state,
     handleFileSelected,
     handleAIParse,
-    handleMappingConfirmed,
-    getValidRows,
+    updateRowCategory,
     reset,
     setStep,
     setError,

@@ -5,7 +5,7 @@ import type {
   Upload,
   Category,
 } from '@/types';
-import type { TransactionInsert, BudgetInsert, InsightInsert, UploadInsert } from './types';
+import type { TransactionInsert, BudgetInsert, InsightInsert, UploadInsert, CategorizationRuleInsert } from './types';
 import { supabase } from './client';
 
 function toTransaction(row: Record<string, unknown>): Transaction {
@@ -222,6 +222,38 @@ export async function saveInsights(
 
   if (error) throw error;
   return (data ?? []).map(toInsight);
+}
+
+// --- Categorization rules ---
+
+export interface LearnedRule {
+  description: string;
+  category: Category;
+}
+
+export async function fetchCategorizationRules(userId: string): Promise<LearnedRule[]> {
+  const { data, error } = await supabase
+    .from('categorization_rules')
+    .select('description, category')
+    .eq('user_id', userId)
+    .order('last_confirmed_at', { ascending: false })
+    .limit(150);
+
+  if (error) throw error;
+  return (data ?? []).map(row => ({
+    description: row.description as string,
+    category: row.category as Category,
+  }));
+}
+
+export async function upsertCategorizationRules(
+  rules: CategorizationRuleInsert[],
+): Promise<void> {
+  if (rules.length === 0) return;
+  const { error } = await supabase
+    .from('categorization_rules')
+    .upsert(rules, { onConflict: 'user_id,description' });
+  if (error) throw error;
 }
 
 // --- Uploads ---

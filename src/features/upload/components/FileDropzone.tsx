@@ -8,8 +8,8 @@ interface FileDropzoneProps {
   error: string | null;
 }
 
-const ACCEPTED_TYPE = '.csv';
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ACCEPTED_TYPE = '.pdf';
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export function FileDropzone({ onFileSelected, error }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -18,13 +18,13 @@ export function FileDropzone({ onFileSelected, error }: FileDropzoneProps) {
 
   function validateAndEmit(file: File) {
     setFileTypeError(null);
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      setFileTypeError(`"${file.name}" is not a CSV file. Please upload a .csv file.`);
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setFileTypeError(`"${file.name}" is not a PDF file. Please upload a .pdf file.`);
       return;
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
       const sizeMb = (file.size / 1024 / 1024).toFixed(1);
-      setFileTypeError(`"${file.name}" is ${sizeMb} MB. Please upload a file under 5 MB.`);
+      setFileTypeError(`"${file.name}" is ${sizeMb} MB. Please upload a file under 10 MB.`);
       return;
     }
     onFileSelected(file);
@@ -82,7 +82,7 @@ export function FileDropzone({ onFileSelected, error }: FileDropzoneProps) {
       >
         <Upload className="mb-4 h-10 w-10 text-muted-foreground" />
         <p className="text-sm font-medium">
-          {dragging ? 'Drop your CSV file here' : 'Drag and drop your CSV file here'}
+          {dragging ? 'Drop your PDF here' : 'Drag and drop your bank statement PDF here'}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">or click to browse</p>
       </button>

@@ -1,5 +1,6 @@
-import type { ParsedCSVRow } from '@/types';
+import type { CategorizedRow, Category } from '@/types';
 import { fetchWithRetry } from './fetchWithRetry';
+import { categorySchema } from '@/lib/validators/transaction';
 import { z } from 'zod';
 
 const aiTransactionSchema = z.object({
@@ -7,25 +8,27 @@ const aiTransactionSchema = z.object({
   description: z.string().min(1),
   amount: z.number().finite(),
   currency: z.string().min(1).max(5).optional(),
+  category: categorySchema.nullable().optional(),
+  confidence: z.number().min(0).max(1).nullable().optional(),
 });
 
 const aiParseResponseSchema = z.object({
   transactions: z.array(aiTransactionSchema),
 });
 
-const MAX_TEXT_LENGTH = 50_000;
+export interface LearnedRule {
+  description: string;
+  category: Category;
+}
 
-export async function parseCSVWithAI(
-  rawText: string,
+export async function parsePDFWithAI(
+  pdfBase64: string,
   accessToken: string,
-): Promise<ParsedCSVRow[]> {
-  const trimmedText = rawText.length > MAX_TEXT_LENGTH
-    ? rawText.slice(0, MAX_TEXT_LENGTH)
-    : rawText;
-
+  learnedRules: LearnedRule[] = [],
+): Promise<CategorizedRow[]> {
   const data = await fetchWithRetry({
     endpoint: '/api/parse-csv',
-    body: { rawText: trimmedText },
+    body: { pdfBase64, learnedRules },
     accessToken,
   });
 
@@ -36,5 +39,8 @@ export async function parseCSVWithAI(
     description: transaction.description,
     amount: transaction.amount,
     currency: transaction.currency,
+    category: transaction.category ?? null,
+    confidence: transaction.confidence ?? null,
+    manuallyEdited: false,
   }));
 }

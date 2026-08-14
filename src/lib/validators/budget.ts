@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { categorySchema } from './transaction';
 
 export const budgetInputSchema = z.object({
-  category: categorySchema,
+  category: z.string().min(1, 'Please select a category').pipe(categorySchema),
   limitAmount: z.number().positive('Budget amount must be positive'),
   month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
 });

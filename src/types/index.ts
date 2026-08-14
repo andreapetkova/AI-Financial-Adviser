@@ -86,6 +86,12 @@ export interface ParsedCSVRow {
   currency?: string;
 }
 
+export interface CategorizedRow extends ParsedCSVRow {
+  category: Category | null;
+  confidence: number | null;
+  manuallyEdited: boolean;
+}
+
 export interface AICategorizationResult {
   transactionId: string;
   category: Category;

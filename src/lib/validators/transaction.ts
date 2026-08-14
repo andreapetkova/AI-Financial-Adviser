@@ -68,6 +68,10 @@ export const insightSchema = z.object({
   type: z.enum(insightTypeValues),
 });
 
+export const aiInsightResponseSchema = z.object({
+  insights: z.array(insightSchema),
+});
+
 export const insightResponseSchema = z.object({
   insights: z.array(insightSchema),
   month: z.string().min(1),

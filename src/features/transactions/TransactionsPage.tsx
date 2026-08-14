@@ -135,7 +135,7 @@ export function TransactionsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {total === 0
-              ? 'No transactions yet — upload a CSV to get started.'
+              ? 'No transactions yet — upload a bank statement to get started.'
               : filtered < total
                 ? `Showing ${filtered} of ${total} transactions`
                 : `${total} transaction${total === 1 ? '' : 's'}`}
@@ -171,8 +171,8 @@ export function TransactionsPage() {
         <EmptyState
           icon={Upload}
           title="No transactions yet"
-          message="Upload a bank statement CSV to see your transactions here."
-          action={{ label: 'Upload CSV', href: '/upload' }}
+          message="Upload a bank statement PDF to see your transactions here."
+          action={{ label: 'Upload statement', href: '/upload' }}
         />
       ) : (
         <TransactionTable

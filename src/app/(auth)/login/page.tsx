@@ -32,48 +32,63 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Enter your credentials to access your account
-          </p>
+
+        {/* Logo + heading */}
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg">
+            <span className="text-xl font-bold text-primary-foreground">F</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sign in to your FinanceAI account
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <FormErrorAlert message={error} />}
+        {/* Form card */}
+        <div className="rounded-2xl bg-card p-8 shadow-md border border-border">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <FormErrorAlert message={error} />}
 
-          <TextInput
-            id="email"
-            label="Email"
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-          />
+            <TextInput
+              id="email"
+              label="Email"
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
 
-          <TextInput
-            id="password"
-            label="Password"
-            type="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-          />
+            <TextInput
+              id="password"
+              label="Password"
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+            />
 
-          <SubmitButton disabled={submitting}>
-            {submitting ? 'Signing in...' : 'Sign in'}
-          </SubmitButton>
-        </form>
+            <div className="pt-1">
+              <SubmitButton disabled={submitting}>
+                {submitting ? 'Signing in...' : 'Sign in'}
+              </SubmitButton>
+            </div>
+          </form>
+        </div>
 
         <p className="text-center text-sm text-muted-foreground">
           {"Don't have an account? "}
-          <Link href="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/signup"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
             Sign up
           </Link>
         </p>

@@ -1,20 +1,46 @@
+import { useMemo } from 'react';
 import type { ParseResult } from '@/lib/parsers/csv';
+import type { CategorizedRow, Category } from '@/types';
+import { CATEGORIES } from '@/types';
+import { CATEGORY_LABELS } from '@/lib/categories';
 import { SubmitButton } from '@/components/SubmitButton';
 import { classnames } from '@/lib/utils';
-import { Sparkles } from 'lucide-react';
+import { AlertTriangle, Sparkles } from 'lucide-react';
+
+const CONFIDENCE_REVIEW_THRESHOLD = 0.75;
+
+function needsReview(row: CategorizedRow): boolean {
+  if (row.manuallyEdited) return false;
+  return row.category === null || (row.confidence !== null && row.confidence < CONFIDENCE_REVIEW_THRESHOLD);
+}
 
 interface ParsePreviewProps {
   result: ParseResult;
+  categorizedRows: CategorizedRow[];
+  onUpdateCategory: (index: number, category: Category) => void;
   onConfirm: () => void;
   onBack: () => void;
   saving: boolean;
   aiParsed?: boolean;
 }
 
-export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: ParsePreviewProps) {
-  const { valid, errors } = result;
+export function ParsePreview({
+  result,
+  categorizedRows,
+  onUpdateCategory,
+  onConfirm,
+  onBack,
+  saving,
+  aiParsed,
+}: ParsePreviewProps) {
+  const { errors } = result;
   const hasErrors = errors.length > 0;
-  const hasCurrency = valid.some((row) => row.currency);
+  const hasCurrency = categorizedRows.some((row) => row.currency);
+
+  const uncategorizedCount = useMemo(
+    () => categorizedRows.filter(row => row.category === null).length,
+    [categorizedRows],
+  );
 
   return (
     <div className="space-y-4">
@@ -23,7 +49,7 @@ export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: Pa
           <h2 className="text-lg font-semibold">Preview</h2>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
-              {valid.length} valid {valid.length === 1 ? 'row' : 'rows'}
+              {categorizedRows.length} valid {categorizedRows.length === 1 ? 'row' : 'rows'}
               {hasErrors && (
                 <span className="text-destructive">
                   {`, ${errors.length} ${errors.length === 1 ? 'error' : 'errors'}`}
@@ -38,6 +64,19 @@ export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: Pa
             )}
           </div>
         </div>
+      </div>
+
+      <div className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50 p-3 text-sm text-purple-800">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>
+          <span className="font-medium">Purple rows</span>
+          {' '}mean the AI was not confident about the category. Please review the dropdown and correct any that look wrong before saving.
+          {uncategorizedCount > 0 && (
+            <span className="font-medium">
+              {' '}{uncategorizedCount} {uncategorizedCount === 1 ? 'transaction has' : 'transactions have'} no category yet and must be assigned.
+            </span>
+          )}
+        </span>
       </div>
 
       {hasErrors && (
@@ -58,7 +97,7 @@ export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: Pa
         </div>
       )}
 
-      {valid.length > 0 && (
+      {categorizedRows.length > 0 && (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
             <thead>
@@ -69,28 +108,61 @@ export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: Pa
                 {hasCurrency && (
                   <th className="px-4 py-2 text-left font-medium">Currency</th>
                 )}
+                <th className="px-4 py-2 text-left font-medium">Category</th>
               </tr>
             </thead>
             <tbody>
-              {valid.slice(0, 50).map((row, index) => (
-                <tr
-                  key={index}
-                  className={classnames(
-                    'border-b last:border-b-0',
-                    index % 2 === 0 ? 'bg-background' : 'bg-muted/25',
-                  )}
-                >
-                  <td className="px-4 py-2">{row.date}</td>
-                  <td className="px-4 py-2">{row.description}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{row.amount.toFixed(2)}</td>
-                  {hasCurrency && <td className="px-4 py-2">{row.currency ?? ''}</td>}
-                </tr>
-              ))}
+              {categorizedRows.slice(0, 50).map((row, index) => {
+                const isReview = needsReview(row);
+                return (
+                  <tr
+                    key={index}
+                    className={classnames(
+                      'border-b last:border-b-0',
+                      isReview
+                        ? 'bg-purple-50/70'
+                        : index % 2 === 0
+                          ? 'bg-background'
+                          : 'bg-muted/25',
+                    )}
+                  >
+                    <td className="px-4 py-2 tabular-nums">{row.date}</td>
+                    <td className="px-4 py-2">{row.description}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{row.amount.toFixed(2)}</td>
+                    {hasCurrency && <td className="px-4 py-2">{row.currency ?? ''}</td>}
+                    <td className="px-4 py-2">
+                      <select
+                        value={row.category ?? ''}
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            onUpdateCategory(index, event.target.value as Category);
+                          }
+                        }}
+                        className={classnames(
+                          'rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2',
+                          isReview
+                            ? 'border-purple-300 bg-white focus:ring-purple-400'
+                            : 'border-input bg-background focus:ring-ring',
+                        )}
+                      >
+                        {!row.category && (
+                          <option value="">Select category…</option>
+                        )}
+                        {CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {CATEGORY_LABELS[category]}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-          {valid.length > 50 && (
+          {categorizedRows.length > 50 && (
             <p className="px-4 py-2 text-sm text-muted-foreground">
-              Showing 50 of {valid.length} rows
+              Showing 50 of {categorizedRows.length} rows
             </p>
           )}
         </div>
@@ -108,10 +180,10 @@ export function ParsePreview({ result, onConfirm, onBack, saving, aiParsed }: Pa
         <SubmitButton
           type="button"
           onClick={onConfirm}
-          disabled={valid.length === 0 || saving}
+          disabled={categorizedRows.length === 0 || saving}
           className="w-auto"
         >
-          {saving ? 'Saving...' : `Save ${valid.length} transactions`}
+          {saving ? 'Saving...' : `Save ${categorizedRows.length} transactions`}
         </SubmitButton>
       </div>
     </div>

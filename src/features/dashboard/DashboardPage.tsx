@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
@@ -37,11 +37,39 @@ const MonthlyComparison = dynamic(
 );
 
 export function DashboardPage() {
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    // If navigating from the upload success screen, use the uploaded month
+    const focused = sessionStorage.getItem('dashboard_focus_month');
+    if (focused) {
+      sessionStorage.removeItem('dashboard_focus_month');
+      return focused;
+    }
+    return new Date().toISOString().slice(0, 7);
+  });
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const hasAutoSelectedMonth = useRef(false);
 
   const { data: transactions = [], isLoading: transactionsLoading, isError: transactionsError } =
     useTransactionsQuery();
+
+  // Fallback auto-select: when there is no data for the current month, switch to the
+  // most recent month that has spending transactions.
+  useEffect(() => {
+    if (hasAutoSelectedMonth.current || transactions.length === 0) return;
+    hasAutoSelectedMonth.current = true;
+    const hasSpendingInSelectedMonth = transactions.some(
+      t => t.amount < 0 && t.date.slice(0, 7) === selectedMonth,
+    );
+    if (!hasSpendingInSelectedMonth) {
+      const mostRecentSpendingMonth = transactions
+        .filter(t => t.amount < 0)
+        .map(t => t.date.slice(0, 7))
+        .sort()
+        .at(-1);
+      if (mostRecentSpendingMonth) setSelectedMonth(mostRecentSpendingMonth);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions]);
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgetsQuery(selectedMonth);
 
   const currency = transactions[0]?.currency ?? 'USD';
@@ -91,7 +119,7 @@ export function DashboardPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {transactions.length === 0
-              ? 'Upload a CSV to see your financial overview.'
+              ? 'Upload a bank statement to see your financial overview.'
               : 'Your financial overview for the selected month.'}
           </p>
         </div>

@@ -1,8 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { categorizeTransactions } from '@/lib/ai/categorizer';
+import { fetchWithRetry } from '@/lib/ai/fetchWithRetry';
 import { updateTransactionCategories } from '@/lib/supabase/queries';
-import type { TransactionInput } from '@/lib/ai/types';
+import { categorizationResponseSchema } from '@/lib/validators/transaction';
 import { useAuth } from './useAuth';
+
+interface TransactionInput {
+  id: string;
+  description: string;
+  amount: number;
+}
 
 export function useCategorizeMutation() {
   const { session } = useAuth();
@@ -14,7 +20,13 @@ export function useCategorizeMutation() {
         throw new Error('Not authenticated');
       }
 
-      const results = await categorizeTransactions(transactions, session.access_token);
+      const data = await fetchWithRetry({
+        endpoint: '/api/categorize',
+        body: { transactions },
+        accessToken: session.access_token,
+      });
+
+      const { results } = categorizationResponseSchema.parse(data);
 
       await updateTransactionCategories(
         results.map(result => ({

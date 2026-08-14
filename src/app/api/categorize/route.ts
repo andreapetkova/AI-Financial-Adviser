@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { CATEGORIES } from '@/types';
 import { categorizationResponseSchema } from '@/lib/validators/transaction';
-import { extractJson, getTextContent } from '@/lib/ai/parseAiResponse';
 
 const requestSchema = z.object({
   transactions: z.array(z.object({
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
   }
@@ -73,23 +72,23 @@ export async function POST(request: Request) {
   const { transactions } = parsed.data;
 
   try {
-    const client = new Anthropic({ apiKey });
-    const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6';
+    const ai = new GoogleGenAI({ apiKey });
 
-    const message = await client.messages.create({
-      model,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(transactions) }],
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: buildUserPrompt(transactions) }] }],
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+      },
     });
 
-    const text = getTextContent(message.content);
+    const text = response.text;
     if (!text) {
       return NextResponse.json({ error: 'No text response from AI' }, { status: 502 });
     }
 
-    const jsonString = extractJson(text);
-    const rawResponse = JSON.parse(jsonString);
+    const rawResponse = JSON.parse(text);
     const validated = categorizationResponseSchema.parse(rawResponse);
 
     return NextResponse.json(validated);
@@ -100,9 +99,11 @@ export async function POST(request: Request) {
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'AI returned invalid JSON' }, { status: 502 });
     }
-    if (error instanceof Anthropic.APIError) {
-      const status = error.status === 429 ? 429 : 502;
-      return NextResponse.json({ error: 'AI service error', message: error.message }, { status });
+    if (error instanceof Error) {
+      if (error.message.includes('429') || error.message.toLowerCase().includes('quota')) {
+        return NextResponse.json({ error: 'AI service rate limit', message: error.message }, { status: 429 });
+      }
+      return NextResponse.json({ error: 'AI service error', message: error.message }, { status: 502 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
