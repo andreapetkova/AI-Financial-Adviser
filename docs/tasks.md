@@ -2,10 +2,10 @@ AI Financial Assistant - Implementation Plan
  Context
 
  Building a production-grade AI-powered financial assistant SaaS app for portfolio/interview purposes (targeting Remote.com senior frontend roles). The app analyzes bank
- statements, categorizes expenses via Claude AI, and provides budgeting tools and insights.
+ statements, categorizes expenses via Gemini, and provides budgeting tools and insights.
 
  Key decisions made:
- - API Layer: Vercel Serverless Functions (for Claude API proxy)
+ - API Layer: Vercel Serverless Functions (for Gemini API proxy)
  - Storage: Supabase (PostgreSQL + real-time)
  - Auth: Supabase Auth (email/password + OAuth)
  - Testing: Jest + React Testing Library (unit/integration), Playwright (E2E)
@@ -26,7 +26,7 @@ AI Financial Assistant - Implementation Plan
    - Recharts
    - Zod
    - Supabase client (@supabase/supabase-js)
-   - Anthropic SDK (@anthropic-ai/sdk - for serverless functions)
+   - Google Gen AI SDK (@google/genai - for serverless functions)
    - Papa Parse (CSV parsing)
  3. Configure TypeScript strict mode
  4. Set up folder structure per spec:
@@ -40,7 +40,7 @@ AI Financial Assistant - Implementation Plan
  /api          ← Vercel serverless functions
  /tests        ← Playwright E2E (later)
  5. Configure ESLint + Prettier
- 6. Set up .env.local with placeholder keys (Supabase URL/key, Anthropic key)
+ 6. Set up .env.local with placeholder keys (Supabase URL/key, Gemini key)
  7. Add .gitignore, vercel.json
  8. Initialize git repo, first commit
 
@@ -60,8 +60,8 @@ AI Financial Assistant - Implementation Plan
  2. Create /src/lib/validators/transaction.ts — Zod schemas:
    - csvRowSchema — validates a single parsed CSV row
    - transactionSchema — validates a full Transaction object
-   - categorizationResponseSchema — validates Claude API categorization response
-   - insightResponseSchema — validates Claude API insight response
+   - categorizationResponseSchema — validates Gemini API categorization response
+   - insightResponseSchema — validates Gemini API insight response
  3. Create /src/lib/validators/budget.ts — Zod schemas for budget input
 
  Verification: Types compile, Zod schemas parse sample data correctly.
@@ -141,14 +141,14 @@ AI Financial Assistant - Implementation Plan
  Verification: Upload a sample CSV, see preview table, confirm, data saved to Supabase.
 
  ---
- Task 6: AI Service Layer (Vercel Serverless + Claude API)
+ Task 6: AI Service Layer (Vercel Serverless + Gemini API)
 
  Goal: Build the AI backend (serverless functions) and frontend service layer.
 
  Serverless functions (in /api):
  1. /api/categorize.ts — receives transactions, returns categories:
    - Hybrid approach: regex rules for obvious categories (e.g., "Netflix" → subscriptions)
-   - Claude API for ambiguous ones (batch, to reduce API calls)
+   - Gemini API for ambiguous ones (batch, to reduce API calls)
    - Returns { transactionId, category, confidence }[]
    - Validates response with Zod schema
  2. /api/insights.ts — receives categorized transaction data, returns insights:

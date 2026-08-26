@@ -50,3 +50,6 @@ Fixed a "Rendered more hooks than during the previous render" crash that occurre
 
 ## Next.js Migration
 Migrated from Vite + React Router to Next.js 16 App Router with React 19. Replaced React Router with file-based routing under `src/app/` using route groups: `(auth)` for public pages (login, signup) and `(app)` for protected pages with sidebar layout. Converted Vercel serverless functions to Next.js Route Handlers sharing types via `@/` imports. Updated environment variables from `VITE_*` to `NEXT_PUBLIC_*`, replaced `import.meta.env` with `process.env`, and upgraded Supabase client to untyped mode for SDK v2.105 compatibility. Removed React Router, Vite, and related configs.
+
+## AI Provider Migration: Claude → Gemini
+All three AI routes (`/api/categorize`, `/api/insights`, `/api/parse-csv`) now call Gemini (`gemini-2.5-flash` via `@google/genai`) instead of the Claude API, reading `GEMINI_API_KEY`. Updated `CLAUDE.md`, `docs/ai_financial_assistant_project.md`, and `docs/tasks.md` to reflect this — those had drifted and still described Claude/Anthropic SDK as the current provider. Left earlier entries in this file untouched since they correctly record what was true when each task was completed.
