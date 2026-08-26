@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
 import { SkeletonCard } from '@/components/Skeleton';
+import { MonthPicker } from '@/components/MonthPicker';
 import { SummaryCards } from './components/SummaryCards';
+import { CategoryBreakdown } from './components/CategoryBreakdown';
 import {
   useSpendingSummary,
   useCategoryBreakdown,
@@ -23,11 +25,6 @@ function ChartLoadingSkeleton() {
 
 const SpendingChart = dynamic(
   () => import('./components/SpendingChart').then(m => m.SpendingChart),
-  { ssr: false, loading: () => <ChartLoadingSkeleton /> },
-);
-
-const CategoryBreakdown = dynamic(
-  () => import('./components/CategoryBreakdown').then(m => m.CategoryBreakdown),
   { ssr: false, loading: () => <ChartLoadingSkeleton /> },
 );
 
@@ -84,16 +81,23 @@ export function DashboardPage() {
   const dailySpending = useSpendingByDay(chartTransactions, selectedMonth);
   const monthlyComparison = useMonthlyComparison(transactions);
 
-  function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setSelectedMonth(event.target.value);
+  const previousMonth = useMemo(() => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const date = new Date(year, month - 2, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }, [selectedMonth]);
+  const previousSummary = useSpendingSummary(transactions, [], previousMonth);
+
+  function handleMonthChange(month: string) {
+    setSelectedMonth(month);
     setSelectedCategory(null);
   }
 
   if (transactionsLoading || budgetsLoading) {
     return (
       <div className="space-y-6" aria-label="Loading dashboard" role="status">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} lines={2} />)}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} lines={2} />)}
         </div>
         <SkeletonCard lines={4} />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -123,17 +127,15 @@ export function DashboardPage() {
               : 'Your financial overview for the selected month.'}
           </p>
         </div>
-        <label htmlFor="dashboard-month" className="sr-only">Select month</label>
-        <input
+        <MonthPicker
           id="dashboard-month"
-          type="month"
+          label="Select month"
           value={selectedMonth}
           onChange={handleMonthChange}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
-      <SummaryCards summary={summary} currency={currency} />
+      <SummaryCards summary={summary} previousSummary={previousSummary} currency={currency} />
 
       <div className="rounded-lg border border-border bg-card p-5">
         <h2 className="mb-4 text-sm font-medium">
@@ -149,12 +151,12 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h2 className="mb-1 text-sm font-medium">Spending by Category</h2>
+          <h2 className="mb-1 text-sm font-medium">Top Categories</h2>
           <p className="mb-4 text-xs text-muted-foreground">
-            Click a slice to highlight a category.
+            Click a category to filter the chart above.
           </p>
           <CategoryBreakdown
-            data={categoryBreakdown}
+            data={categoryBreakdown.slice(0, 5)}
             selectedCategory={selectedCategory}
             onCategorySelect={setSelectedCategory}
             currency={currency}

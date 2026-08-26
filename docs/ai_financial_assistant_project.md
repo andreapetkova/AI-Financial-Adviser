@@ -98,7 +98,7 @@ Targeted at: **Remote.com** senior frontend engineering roles.
 
 ### AI Integration
 
-- **Claude API** (Anthropic) — categorization + insight generation
+- **Gemini API** (Google) — categorization + insight generation
 - Clean, isolated service layer (`/lib/ai`) — all prompt logic, parsing, retry, and error handling lives here, not in components
 
 ### Testing
@@ -119,7 +119,7 @@ Targeted at: **Remote.com** senior frontend engineering roles.
 
 - Input: transaction description + amount
 - Output: category + confidence score
-- Hybrid approach: rules/regex for obvious categories, Claude API only for ambiguous ones (reduces cost and latency)
+- Hybrid approach: rules/regex for obvious categories, Gemini API only for ambiguous ones (reduces cost and latency)
 
 ### Insight Generation
 
@@ -169,7 +169,7 @@ Targeted at: **Remote.com** senior frontend engineering roles.
     /insights       # AI-generated insights display
   /components       # Shared, reusable UI components
   /lib
-    /ai             # Claude API service layer (prompts, parsing, retry)
+    /ai             # Gemini API service layer (prompts, parsing, retry)
     /validators     # Zod schemas
     /utils          # Pure utility functions
   /hooks            # Custom React hooks

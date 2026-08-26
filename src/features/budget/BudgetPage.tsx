@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTransactionsQuery } from '@/hooks/useTransactions';
 import { useBudgetsQuery } from '@/hooks/useBudgets';
 import { SkeletonCard } from '@/components/Skeleton';
+import { MonthPicker } from '@/components/MonthPicker';
 import { BudgetOverview } from './components/BudgetOverview';
 import { BudgetForm } from './components/BudgetForm';
 import type { Budget, Category } from '@/types';
@@ -34,8 +35,8 @@ export function BudgetPage() {
     return map;
   }, [transactions, selectedMonth]);
 
-  function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setSelectedMonth(event.target.value);
+  function handleMonthChange(month: string) {
+    setSelectedMonth(month);
     setEditingBudget(null);
   }
 
@@ -70,13 +71,11 @@ export function BudgetPage() {
             Set monthly spending limits per category and track your progress.
           </p>
         </div>
-        <label htmlFor="budget-page-month" className="sr-only">Select month</label>
-        <input
+        <MonthPicker
           id="budget-page-month"
-          type="month"
+          label="Select month"
           value={selectedMonth}
           onChange={handleMonthChange}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

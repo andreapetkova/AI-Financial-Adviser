@@ -66,10 +66,10 @@ export function ParsePreview({
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50 p-3 text-sm text-purple-800">
+      <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
-          <span className="font-medium">Purple rows</span>
+          <span className="font-medium">Amber rows</span>
           {' '}mean the AI was not confident about the category. Please review the dropdown and correct any that look wrong before saving.
           {uncategorizedCount > 0 && (
             <span className="font-medium">
@@ -120,7 +120,7 @@ export function ParsePreview({
                     className={classnames(
                       'border-b last:border-b-0',
                       isReview
-                        ? 'border-l-4 border-l-purple-600 bg-purple-200/80'
+                        ? 'border-l-4 border-l-amber-500 bg-amber-500/10'
                         : index % 2 === 0
                           ? 'bg-background'
                           : 'bg-muted/25',
@@ -134,7 +134,7 @@ export function ParsePreview({
                       <div className="flex items-center gap-1.5">
                         {isReview && (
                           <AlertTriangle
-                            className="h-3.5 w-3.5 shrink-0 text-purple-700"
+                            className="h-3.5 w-3.5 shrink-0 text-amber-400"
                             aria-label="Needs review"
                           />
                         )}
@@ -148,7 +148,7 @@ export function ParsePreview({
                           className={classnames(
                             'rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2',
                             isReview
-                              ? 'border-2 border-purple-600 bg-white font-medium text-purple-900 focus:ring-purple-400'
+                              ? 'border-2 border-amber-500 bg-background font-medium text-amber-300 focus:ring-amber-400'
                               : 'border-input bg-background focus:ring-ring',
                           )}
                         >

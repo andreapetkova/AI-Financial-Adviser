@@ -11,6 +11,15 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
+import {
+  CHART_AXIS_TICK,
+  CHART_GRID_STROKE,
+  CHART_LEGEND_STYLE,
+  CHART_TOOLTIP_LABEL_STYLE,
+  CHART_TOOLTIP_STYLE,
+  INCOME_COLOR,
+  SPENDING_COLOR,
+} from '@/lib/chartTheme';
 import type { MonthlyComparisonItem } from '../hooks/useSpendingData';
 
 interface MonthlyComparisonProps {
@@ -29,22 +38,39 @@ export function MonthlyComparison({ data, currency }: MonthlyComparisonProps) {
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} />
-        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+      <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 8 }} barCategoryGap="30%">
+        <CartesianGrid vertical={false} stroke={CHART_GRID_STROKE} />
+        <XAxis dataKey="label" tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
         <YAxis
-          tick={{ fontSize: 11 }}
+          tick={CHART_AXIS_TICK}
           tickFormatter={(value: number) =>
             formatCurrency(value, currency, { maximumFractionDigits: 0 })
           }
           width={68}
+          axisLine={false}
+          tickLine={false}
         />
         <Tooltip
           formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
+          contentStyle={CHART_TOOLTIP_STYLE}
+          labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+          cursor={{ fill: 'var(--color-muted)' }}
         />
-        <Legend />
-        <Bar dataKey="spending" name="Spending" fill="#ef4444" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="income" name="Income" fill="#22c55e" radius={[3, 3, 0, 0]} />
+        <Legend iconType="circle" iconSize={8} wrapperStyle={CHART_LEGEND_STYLE} />
+        <Bar
+          dataKey="spending"
+          name="Spending"
+          fill={SPENDING_COLOR}
+          radius={[6, 6, 0, 0]}
+          maxBarSize={36}
+        />
+        <Bar
+          dataKey="income"
+          name="Income"
+          fill={INCOME_COLOR}
+          radius={[6, 6, 0, 0]}
+          maxBarSize={36}
+        />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -4,23 +4,23 @@ import type { Insight } from '@/types';
 const INSIGHT_CONFIG = {
   warning: {
     Icon: AlertTriangle,
-    iconClass: 'text-amber-500',
-    borderClass: 'border-amber-200 bg-amber-50',
-    labelClass: 'text-amber-700 bg-amber-100',
+    iconClass: 'text-amber-400',
+    borderClass: 'border-amber-200 bg-amber-500/10',
+    labelClass: 'text-amber-300 bg-amber-500/15',
     label: 'Warning',
   },
   saving: {
     Icon: Lightbulb,
-    iconClass: 'text-emerald-500',
-    borderClass: 'border-emerald-200 bg-emerald-50',
-    labelClass: 'text-emerald-700 bg-emerald-100',
+    iconClass: 'text-emerald-400',
+    borderClass: 'border-emerald-200 bg-emerald-500/10',
+    labelClass: 'text-emerald-300 bg-emerald-500/15',
     label: 'Saving Tip',
   },
   info: {
     Icon: Info,
-    iconClass: 'text-blue-500',
-    borderClass: 'border-blue-200 bg-blue-50',
-    labelClass: 'text-blue-700 bg-blue-100',
+    iconClass: 'text-blue-400',
+    borderClass: 'border-blue-200 bg-blue-500/10',
+    labelClass: 'text-blue-300 bg-blue-500/15',
     label: 'Info',
   },
 } as const;
@@ -42,7 +42,7 @@ export function InsightCard({ insight }: InsightCardProps) {
               {label}
             </span>
           </div>
-          <p className="text-sm text-gray-700">{insight.message}</p>
+          <p className="text-sm text-foreground/80">{insight.message}</p>
         </div>
       </div>
     </div>

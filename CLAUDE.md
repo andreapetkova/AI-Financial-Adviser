@@ -7,7 +7,7 @@
 
 # Project
 
-AI Financial Assistant — AI-powered SaaS app that analyzes bank statements, categorizes expenses via Claude AI, and provides budgeting tools and financial insights.
+AI Financial Assistant — AI-powered SaaS app that analyzes bank statements, categorizes expenses via Gemini, and provides budgeting tools and financial insights.
 
 # Stack
 
@@ -18,7 +18,7 @@ AI Financial Assistant — AI-powered SaaS app that analyzes bank statements, ca
 - TanStack Query (server state)
 - Recharts (data visualization)
 - Zod (runtime validation), Papa Parse (CSV parsing)
-- Anthropic SDK (Claude API via Next.js Route Handlers)
+- Google Gen AI SDK (`@google/genai`, Gemini API via Next.js Route Handlers)
 - Deployed on Vercel
 
 # Structure
@@ -26,14 +26,14 @@ AI Financial Assistant — AI-powered SaaS app that analyzes bank statements, ca
 - `src/app/` — Next.js App Router (layouts, pages, API routes)
 - `src/app/(auth)/` — public auth pages (login, signup) with redirect-if-authenticated layout
 - `src/app/(app)/` — protected pages (dashboard, upload, transactions, budget, insights) with sidebar layout
-- `src/app/api/` — Next.js Route Handlers (categorize, insights) — server-side Claude API calls
+- `src/app/api/` — Next.js Route Handlers (categorize, insights, parse-csv) — server-side Gemini API calls
 - `src/features/upload/` — CSV upload, parsing, column mapping, preview
 - `src/features/transactions/` — transaction list, category editing (human-in-the-loop)
 - `src/features/dashboard/` — spending charts, category breakdown, monthly comparison
 - `src/features/budget/` — budget configuration, progress tracking per category
 - `src/features/insights/` — AI-generated financial insights display
 - `src/components/` — shared reusable UI components (ErrorBoundary, LoadingSpinner, form primitives)
-- `src/lib/ai/` — Claude API service layer (prompts, parsing, retry, rules-based categorizer)
+- `src/lib/ai/` — Gemini API service layer (prompts, parsing, retry, rules-based categorizer)
 - `src/lib/validators/` — Zod schemas for transactions, budgets, API responses
 - `src/lib/supabase/` — Supabase client singleton and typed query functions
 - `src/lib/parsers/` — CSV parsing logic (Papa Parse → raw rows → Zod validation → typed `Transaction[]`)
@@ -70,13 +70,13 @@ After every change, run in this order:
 - **Client components**: add `'use client'` directive to any component using hooks, state, event handlers, or browser APIs
 - **Route protection**: handled via `(auth)` and `(app)` route group layouts — `(auth)/layout.tsx` redirects authenticated users, `(app)/layout.tsx` redirects unauthenticated users
 - **Isolated AI layer**: all prompt construction, API calls, response parsing, retry logic lives in `src/lib/ai/` — components never call the AI API directly
-- **Hybrid categorization**: regex rules for obvious categories (e.g., "Netflix" → subscriptions), Claude API only for ambiguous ones — cost-aware and latency-aware by design
+- **Hybrid categorization**: regex rules for obvious categories (e.g., "Netflix" → subscriptions), Gemini API only for ambiguous ones — cost-aware and latency-aware by design
 - **Optimistic UI**: category edits update immediately, sync to Supabase in background
 - **shadcn/ui components**: use shadcn primitives (owned in codebase), not external component libraries
 - **Zod validation at boundaries**: validate CSV input, AI API responses, and user input with Zod schemas. CSV pipeline order is always: Papa Parse → raw rows → Zod validation → typed `Transaction[]`
 - **TanStack Query for all server state**: no manual fetch/useEffect patterns for data fetching
 - **Lazy loading**: chart components (Recharts) loaded with `React.lazy()` or `next/dynamic`
-- **Error boundaries**: the AI insights feature and the upload flow each have their own isolated error boundary — a Claude API failure must never crash the dashboard. All error boundary fallback UIs are defined in `src/components/`
+- **Error boundaries**: the AI insights feature and the upload flow each have their own isolated error boundary — a Gemini API failure must never crash the dashboard. All error boundary fallback UIs are defined in `src/components/`
 - **Type source of truth**: hand-written domain models in `src/types/` are the source of truth — Supabase-generated types must be kept in sync with them, not the other way around
 - **Auth state**: managed via a single `useAuth()` hook in `src/hooks/` backed by Supabase's `onAuthStateChange` — AuthContext is a thin wrapper only, not a general-purpose state store
 - **Descriptive naming**: prefer full, readable names over abbreviations and shorthands (e.g., `classnames` not `cn`, `handleSubmit` not `onSub`)
@@ -104,9 +104,9 @@ After every change, run in this order:
 - Don't skip Zod validation for external data (CSV rows, API responses) — always validate at system boundaries
 - Don't use `useEffect` for data fetching — use TanStack Query hooks instead
 - Don't install external component libraries — use shadcn/ui primitives and build from there
-- Don't store API keys client-side — proxy all Claude API calls through Next.js Route Handlers in `src/app/api/`
+- Don't store API keys client-side — proxy all Gemini API calls through Next.js Route Handlers in `src/app/api/`
 - Don't add Zustand unless you feel genuine cross-cutting state pain that Context cannot solve — it is not in the stack by default
-- Don't let a Claude API failure propagate to the full page — AI features must fail within their own error boundary
+- Don't let a Gemini API failure propagate to the full page — AI features must fail within their own error boundary
 - Don't call Supabase-generated types your source of truth — sync them to `src/types/`, never the reverse
 - Don't use `Math.abs` on transaction amounts in range filters — filter on signed values so users can distinguish income (positive) from expenses (negative)
 - Don't use `useState(someFunction)` when you mean lazy initialisation — use `useState(() => someFunction())` so the intent is unambiguous to readers

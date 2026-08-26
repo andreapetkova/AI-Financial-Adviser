@@ -41,10 +41,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (fallback) return fallback(error, this.handleReset);
 
       return (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 py-12 text-center">
           <AlertTriangle className="mb-3 h-8 w-8 text-red-400" />
-          <p className="text-sm font-medium text-red-700">Something went wrong</p>
-          <p className="mt-1 text-sm text-red-500">{error.message}</p>
+          <p className="text-sm font-medium text-red-300">Something went wrong</p>
+          <p className="mt-1 text-sm text-red-400">{error.message}</p>
           <button
             onClick={this.handleReset}
             className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"

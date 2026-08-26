@@ -1,13 +1,17 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { redirect } from 'next/navigation';
 
 export default function RootPage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
-  if (loading) return <LoadingSpinner />;
+  useEffect(() => {
+    if (!loading) router.replace(user ? '/dashboard' : '/login');
+  }, [loading, user, router]);
 
-  redirect(user ? '/dashboard' : '/login');
+  return <LoadingSpinner />;
 }

@@ -8,6 +8,7 @@ import { useBudgetsQuery } from '@/hooks/useBudgets';
 import { useInsightsQuery, useGenerateInsightsMutation } from '@/hooks/useInsights';
 import { useToast } from '@/context/ToastContext';
 import { SkeletonCard } from '@/components/Skeleton';
+import { MonthPicker } from '@/components/MonthPicker';
 import { InlineSpinner } from '@/components/InlineSpinner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InsightsList } from './components/InsightsList';
@@ -22,9 +23,9 @@ function InsightsErrorBlock({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 py-12 text-center">
-      <p className="text-sm font-medium text-red-700">{title}</p>
-      <p className="mt-1 text-sm text-red-500">{message}</p>
+    <div className="flex flex-col items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 py-12 text-center">
+      <p className="text-sm font-medium text-red-300">{title}</p>
+      <p className="mt-1 text-sm text-red-400">{message}</p>
       <button
         onClick={onRetry}
         className="mt-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
@@ -61,8 +62,8 @@ export function InsightsPage() {
   const currency = transactions[0]?.currency ?? 'USD';
   const hasTransactions = monthTransactions.length > 0;
 
-  function handleMonthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setSelectedMonth(event.target.value);
+  function handleMonthChange(month: string) {
+    setSelectedMonth(month);
     resetMutation();
   }
 
@@ -128,15 +129,11 @@ export function InsightsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label htmlFor="insights-month" className="sr-only">
-            Select month
-          </label>
-          <input
+          <MonthPicker
             id="insights-month"
-            type="month"
+            label="Select month"
             value={selectedMonth}
             onChange={handleMonthChange}
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
             onClick={handleGenerate}

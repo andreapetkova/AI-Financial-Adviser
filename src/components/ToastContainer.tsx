@@ -11,18 +11,18 @@ const TOAST_STYLES: Record<
   { container: string; icon: string; IconComponent: typeof CheckCircle2 }
 > = {
   success: {
-    container: 'border-green-200 bg-green-50 text-green-800',
-    icon: 'text-green-500',
+    container: 'border-green-500/20 bg-green-500/10 text-green-300',
+    icon: 'text-green-400',
     IconComponent: CheckCircle2,
   },
   error: {
-    container: 'border-red-200 bg-red-50 text-red-800',
-    icon: 'text-red-500',
+    container: 'border-red-500/20 bg-red-500/10 text-red-300',
+    icon: 'text-red-400',
     IconComponent: AlertCircle,
   },
   info: {
-    container: 'border-blue-200 bg-blue-50 text-blue-800',
-    icon: 'text-blue-500',
+    container: 'border-blue-500/20 bg-blue-500/10 text-blue-300',
+    icon: 'text-blue-400',
     IconComponent: Info,
   },
 };

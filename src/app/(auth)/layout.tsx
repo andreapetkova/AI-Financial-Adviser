@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { redirect } from 'next/navigation';
 
 export default function AuthLayout({
   children,
@@ -10,9 +11,13 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
-  if (loading) return <LoadingSpinner />;
-  if (user) redirect('/dashboard');
+  useEffect(() => {
+    if (!loading && user) router.replace('/dashboard');
+  }, [loading, user, router]);
+
+  if (loading || user) return <LoadingSpinner />;
 
   return <>{children}</>;
 }

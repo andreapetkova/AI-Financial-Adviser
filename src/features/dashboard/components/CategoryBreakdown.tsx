@@ -1,6 +1,5 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import type { CategoryBreakdownItem } from '../hooks/useSpendingData';
 import type { Category } from '@/types';
@@ -26,39 +25,43 @@ export function CategoryBreakdown({
     );
   }
 
-  function handlePieClick(entry: CategoryBreakdownItem) {
-    onCategorySelect(selectedCategory === entry.category ? null : entry.category);
-  }
+  const maxAmount = data[0].amount;
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="amount"
-          nameKey="label"
-          cx="50%"
-          cy="45%"
-          innerRadius={55}
-          outerRadius={85}
-          onClick={(entry) => handlePieClick(entry as unknown as CategoryBreakdownItem)}
-          className="cursor-pointer"
-        >
-          {data.map((entry) => (
-            <Cell
-              key={entry.category}
-              fill={entry.color}
-              opacity={selectedCategory && selectedCategory !== entry.category ? 0.35 : 1}
-              stroke={selectedCategory === entry.category ? '#111827' : 'transparent'}
-              strokeWidth={selectedCategory === entry.category ? 2 : 0}
-            />
-          ))}
-        </Pie>
-        <Tooltip
-          formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
-        />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+    <ul className="space-y-1">
+      {data.map((item, index) => {
+        const isSelected = selectedCategory === item.category;
+        const isDimmed = selectedCategory !== null && !isSelected;
+
+        return (
+          <li key={item.category}>
+            <button
+              type="button"
+              onClick={() => onCategorySelect(isSelected ? null : item.category)}
+              className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-opacity hover:bg-accent ${
+                isDimmed ? 'opacity-40' : ''
+              }`}
+            >
+              <span className="w-4 shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+                {index + 1}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums">
+                {formatCurrency(item.amount, currency)}
+              </span>
+              <span className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-muted">
+                <span
+                  className="block h-full rounded-full"
+                  style={{
+                    width: `${Math.max((item.amount / maxAmount) * 100, 6)}%`,
+                    backgroundColor: item.color,
+                  }}
+                />
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

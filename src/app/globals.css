@@ -1,25 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(270 50% 97%);
-  --color-foreground: hsl(262 30% 11%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(262 30% 11%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(262 30% 11%);
-  --color-primary: hsl(262 80% 30%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(262 50% 94%);
-  --color-secondary-foreground: hsl(262 80% 30%);
-  --color-muted: hsl(262 40% 95%);
-  --color-muted-foreground: hsl(262 15% 52%);
-  --color-accent: hsl(262 55% 93%);
-  --color-accent-foreground: hsl(262 80% 30%);
-  --color-destructive: hsl(0 84% 60%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(262 25% 89%);
-  --color-input: hsl(262 25% 89%);
-  --color-ring: hsl(262 65% 52%);
+  /* Copilot Money system (midnight canvas, tiered dark surfaces), with the
+     brand accent rotated from their Signal Blue to teal. */
+  --color-background: #000814; /* Midnight Canvas */
+  --color-foreground: #ffffff; /* Paper White */
+  --color-card: #010d1e; /* Deep Surface */
+  --color-card-foreground: #ffffff;
+  --color-popover: #010d1e;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #14b8a6; /* Signal Teal */
+  --color-primary-foreground: #ffffff;
+  --color-secondary: hsl(173 45% 11%); /* Teal Surface */
+  --color-secondary-foreground: #ffffff;
+  --color-muted: hsl(173 45% 11%);
+  --color-muted-foreground: #999ca1; /* Mist */
+  --color-accent: hsl(173 45% 11%);
+  --color-accent-foreground: #ffffff;
+  --color-destructive: hsl(0 84% 65%);
+  --color-destructive-foreground: #ffffff;
+  --color-border: #11263b; /* Steel Border */
+  --color-input: #11263b;
+  --color-ring: #14b8a6;
   --radius: 0.75rem;
 }
 
@@ -28,8 +30,16 @@
     @apply border-border;
   }
 
+  /* Without this, native form controls (date/month pickers, checkboxes,
+     scrollbars) assume a light page and render with light-mode chrome —
+     e.g. the month-input calendar popup would show white text on a
+     white background, making it unusable against our dark theme. */
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   }
 }

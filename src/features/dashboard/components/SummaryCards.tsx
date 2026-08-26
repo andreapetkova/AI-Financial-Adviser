@@ -1,95 +1,88 @@
 'use client';
 
-import { TrendingDown, TrendingUp, Tag, Target } from 'lucide-react';
+import { TrendingDown, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { SpendingSummary } from '../hooks/useSpendingData';
 
-interface SummaryCardProps {
+interface TrendTileProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  subtext?: string;
-  accent: 'red' | 'green' | 'blue' | 'yellow';
+  accentClass: string;
+  currentAmount: number;
+  previousAmount: number;
+  /** Which direction of change is good news for this metric. */
+  goodDirection: 'up' | 'down';
 }
 
-const ACCENT_CLASSES = {
-  red: 'bg-red-50 text-red-600',
-  green: 'bg-emerald-50 text-emerald-600',
-  blue: 'bg-violet-50 text-violet-600',
-  yellow: 'bg-amber-50 text-amber-600',
-};
+function TrendTile({
+  icon,
+  label,
+  value,
+  accentClass,
+  currentAmount,
+  previousAmount,
+  goodDirection,
+}: TrendTileProps) {
+  const hasPreviousData = previousAmount > 0;
+  const deltaPercent = hasPreviousData
+    ? ((currentAmount - previousAmount) / previousAmount) * 100
+    : 0;
+  const isIncrease = deltaPercent > 0;
+  const isGood = hasPreviousData
+    ? (isIncrease && goodDirection === 'up') || (!isIncrease && goodDirection === 'down')
+    : false;
+  const DeltaIcon = isIncrease ? ArrowUp : ArrowDown;
 
-function SummaryCard({ icon, label, value, subtext, accent }: SummaryCardProps) {
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-2xl font-semibold tabular-nums">{value}</p>
-          {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
         </div>
-        <div className={`rounded-lg p-2 ${ACCENT_CLASSES[accent]}`}>{icon}</div>
+        <div className={`rounded-lg p-2 ${accentClass}`}>{icon}</div>
       </div>
+      {hasPreviousData && deltaPercent !== 0 && (
+        <p
+          className={`mt-3 flex items-center gap-1 text-xs font-medium ${
+            isGood ? 'text-emerald-400' : 'text-rose-400'
+          }`}
+        >
+          <DeltaIcon className="h-3 w-3" aria-hidden="true" />
+          {Math.abs(deltaPercent).toFixed(0)}% vs last month
+        </p>
+      )}
     </div>
   );
 }
 
 interface SummaryCardsProps {
   summary: SpendingSummary;
+  previousSummary: SpendingSummary;
   currency: string;
 }
 
-export function SummaryCards({ summary, currency }: SummaryCardsProps) {
-  const budgetSubtext =
-    summary.budgetsTotal === 0
-      ? 'No budgets set'
-      : `${summary.budgetsOnTrack} of ${summary.budgetsTotal} on track`;
-
-  const budgetAccent: SummaryCardProps['accent'] =
-    summary.budgetsTotal === 0
-      ? 'blue'
-      : summary.budgetsOnTrack === summary.budgetsTotal
-        ? 'green'
-        : 'yellow';
-
+export function SummaryCards({ summary, previousSummary, currency }: SummaryCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <SummaryCard
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <TrendTile
         icon={<TrendingDown className="h-5 w-5" />}
         label="Total Spending"
         value={formatCurrency(summary.totalSpending, currency)}
-        subtext={`${summary.transactionCount} transaction${summary.transactionCount === 1 ? '' : 's'}`}
-        accent="red"
+        accentClass="bg-rose-500/15 text-rose-400"
+        currentAmount={summary.totalSpending}
+        previousAmount={previousSummary.totalSpending}
+        goodDirection="down"
       />
-      <SummaryCard
+      <TrendTile
         icon={<TrendingUp className="h-5 w-5" />}
         label="Total Income"
         value={formatCurrency(summary.totalIncome, currency)}
-        accent="green"
-      />
-      <SummaryCard
-        icon={<Tag className="h-5 w-5" />}
-        label="Top Category"
-        value={summary.topCategoryLabel ?? '—'}
-        subtext={
-          summary.uncategorizedCount > 0
-            ? `${summary.uncategorizedCount} uncategorized`
-            : summary.topCategory
-              ? 'Highest spend'
-              : 'No data yet'
-        }
-        accent={summary.uncategorizedCount > 0 ? 'yellow' : 'blue'}
-      />
-      <SummaryCard
-        icon={<Target className="h-5 w-5" />}
-        label="Budget Status"
-        value={
-          summary.budgetsTotal === 0
-            ? '—'
-            : `${Math.round((summary.budgetsOnTrack / summary.budgetsTotal) * 100)}%`
-        }
-        subtext={budgetSubtext}
-        accent={budgetAccent}
+        accentClass="bg-emerald-500/15 text-emerald-400"
+        currentAmount={summary.totalIncome}
+        previousAmount={previousSummary.totalIncome}
+        goodDirection="up"
       />
     </div>
   );

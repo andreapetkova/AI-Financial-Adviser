@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { redirect } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { classnames } from '@/lib/utils';
@@ -35,6 +34,7 @@ export default function AppLayout({
 }) {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   useEffect(() => {
@@ -51,8 +51,11 @@ export default function AppLayout({
     setIsMobileNavOpen(false);
   }, [pathname]);
 
-  if (loading) return <LoadingSpinner />;
-  if (!user) redirect('/login');
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login');
+  }, [loading, user, router]);
+
+  if (loading || !user) return <LoadingSpinner />;
 
   return (
     <AppLayoutShell
@@ -97,48 +100,47 @@ function AppLayoutShell({
     <ToastProvider>
       <div className="flex h-screen overflow-hidden bg-background">
 
-        {/* ── Desktop icon sidebar ── */}
-        <aside className="hidden md:flex w-[76px] shrink-0 flex-col bg-card border-r border-border">
+        {/* ── Desktop labeled sidebar ── */}
+        <aside className="hidden md:flex w-56 shrink-0 flex-col bg-card border-r border-border">
           {/* Logo mark */}
-          <div className="flex h-16 shrink-0 items-center justify-center border-b border-border">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-sm">
+          <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
               <span className="text-sm font-bold text-primary-foreground">F</span>
             </div>
+            <span className="text-sm font-semibold">FinanceAI</span>
           </div>
 
-          {/* Nav icons */}
-          <nav className="flex flex-1 flex-col items-center gap-1 px-2 py-4" aria-label="Main navigation">
+          {/* Nav items */}
+          <nav className="flex flex-1 flex-col gap-1 px-3 py-4" aria-label="Main navigation">
             {navItems.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
               return (
                 <Link
                   key={href}
                   href={href}
-                  aria-label={label}
                   aria-current={isActive ? 'page' : undefined}
-                  title={label}
                   className={classnames(
-                    'flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                   )}
                 >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  {label}
                 </Link>
               );
             })}
           </nav>
 
           {/* Sign out */}
-          <div className="flex flex-col items-center px-2 py-4 border-t border-border">
+          <div className="px-3 py-4 border-t border-border">
             <button
               onClick={handleSignOut}
-              aria-label="Sign out"
-              title="Sign out"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              <LogOut className="h-5 w-5" aria-hidden="true" />
+              <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
+              Sign out
             </button>
           </div>
         </aside>
