@@ -4,9 +4,9 @@ AI-powered personal finance assistant. Upload your bank statement PDF, get your 
 
 ## Screenshots
 
-| Dashboard overview | Spending charts |
+| Dashboard | AI Insights |
 | --- | --- |
-| ![Dashboard overview](docs/screenshots/dashboard-overview.jpg) | ![Spending by category and monthly comparison](docs/screenshots/dashboard-charts.jpg) |
+| ![Dashboard](docs/screenshots/dashboard.jpg) | ![AI Insights](docs/screenshots/insights.jpg) |
 
 ## Features
 
