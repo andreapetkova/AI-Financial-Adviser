@@ -57,14 +57,15 @@ Get your Gemini API key at **aistudio.google.com/apikey**. All three AI routes (
 
 ### 3. Set up the database
 
-Run both migrations against your Supabase project. You can do this in the Supabase dashboard under **SQL Editor**:
+Run all three migrations against your Supabase project, in order. You can do this in the Supabase dashboard under **SQL Editor**:
 
 ```
 supabase/migrations/00001_initial_schema.sql
 supabase/migrations/00002_fix_profile_trigger.sql
+supabase/migrations/00003_lock_down_handle_new_user.sql
 ```
 
-This creates the `profiles`, `transactions`, `budgets`, `insights`, and `uploads` tables with Row Level Security enabled — each user can only ever see their own data.
+This creates the `profiles`, `transactions`, `budgets`, `insights`, and `uploads` tables with Row Level Security enabled — each user can only ever see their own data — and locks the signup trigger function down so it isn't reachable through the Data API.
 
 ### 4. Run the app
 
